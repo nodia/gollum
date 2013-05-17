@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C38E5F3F-22D8-46FC-ABAE-7651F3CC4C32}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Aidon.Tools.Gollum</RootNamespace>
+    <AssemblyName>Gollum</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>gollum256alpha.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="RestSharp">
+      <HintPath>References\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Bugzilla\BugzillaArguments.cs" />
+    <Compile Include="Bugzilla\BugzillaAuthenticationException.cs" />
+    <Compile Include="Bugzilla\BugzillaBug.cs" />
+    <Compile Include="Bugzilla\BugzillaException.cs" />
+    <Compile Include="Bugzilla\BugzillaRestClient.cs" />
+    <Compile Include="GollumEngine.cs" />
+    <Compile Include="GollumRestClient.cs" />
+    <Compile Include="IBugzillaHandler.cs" />
+    <Compile Include="ProjectSettings.cs" />
+    <Compile Include="GUI\ProjectSettingsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\ProjectSettingsWindow.Designer.cs">
+      <DependentUpon>ProjectSettingsWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ReviewBoard\ReviewBoardAuthenticationException.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardErrorResponse.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardException.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardRestClient.cs" />
+    <Compile Include="Credentials.cs" />
+    <Compile Include="GUI\CredentialsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\CredentialsWindow.Designer.cs">
+      <DependentUpon>CredentialsWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DummyPatchCreator.cs" />
+    <Compile Include="IPatchCreator.cs" />
+    <Compile Include="IReviewBoardHandler.cs" />
+    <Compile Include="DummyReviewBoardHandler.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardArguments.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardResponse.cs" />
+    <Compile Include="ReviewBoard\ReviewBoardReviewRequest.cs" />
+    <Compile Include="ReviewBoard\ReviewIdDiscoveredEventArgs.cs" />
+    <Compile Include="SVN\SubversionArguments.cs" />
+    <Compile Include="GUI\GollumForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\GollumForm.Designer.cs">
+      <DependentUpon>GollumForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SVN\SvnPatchCreator.cs" />
+    <Compile Include="Bugzilla\XmlCommentHash.cs" />
+    <Compile Include="Bugzilla\XmlParameter.cs" />
+    <Compile Include="Bugzilla\XmlRequest.cs" />
+    <EmbeddedResource Include="GUI\CredentialsWindow.resx">
+      <DependentUpon>CredentialsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\GollumForm.resx">
+      <DependentUpon>GollumForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\ProjectSettingsWindow.resx">
+      <DependentUpon>ProjectSettingsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="gollum256alpha.ico" />
+    <Content Include="readme.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

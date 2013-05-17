@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Gollum.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ReviewBoardUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://intra/reviewboard/</Value>
+    </Setting>
+    <Setting Name="TargetProcessUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://adata/TargetProcess2/</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
