@@ -13,7 +13,7 @@ To use Gollum the URL to ReviewBoard and optionally BugZilla need to be defined 
     </setting>
     <setting name="BugzillaUrl" serializeAs="String">
         <!-- leave empty to disable bugzilla integration -->
-        <value>http://aidongw/bugzilla/</value>
+        <value>http://intra/bugzilla/</value>
     </setting>
 </Gollum.Properties.Settings>
 ```
@@ -25,7 +25,7 @@ To use Gollum the URL to ReviewBoard and optionally BugZilla need to be defined 
 
 ### Create a gollum.xml file in project root
 
-This can be done easily by running gollum without arguments. The Gollum.xml file looks like this:
+This can be done easily by running Gollum without arguments. The Gollum.xml file looks like this:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -40,7 +40,7 @@ This can be done easily by running gollum without arguments. The Gollum.xml file
 *ReviewBoardGroup* is the group on ReviewBoard to which the tickets from this SVN repository are associated with.
 *RepositoryBasePath* is the difference between the SVN path defined in ReviewBoard and the path to the SVN repository.
 
-### Install a hook script for TortoiseSVN. See below for instructions based on TortoiseSVN version.
+### Install a hook script for TortoiseSVN
 
 #### TortoiseSVN 1.7 and older
 
