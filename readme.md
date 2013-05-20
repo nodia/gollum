@@ -1,6 +1,6 @@
 # Gollum
 
-Gollum is A graphical user interface post-commit hook tool for TortoiseSVN to create Review Board tickets and update BugZilla bugs. It provides an easy way to create a diff of a commit, post the diff to 
+Gollum is a graphical user interface post-commit hook tool for TortoiseSVN to create Review Board tickets and update BugZilla bugs. It provides an easy way to create a diff of a commit, post the diff to 
 Review Board and update a bug on BugZilla if one was fixed in the commit. 
 
 ## Setting up Gollum
