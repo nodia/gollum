@@ -6,7 +6,7 @@ namespace Aidon.Tools.Gollum
     {
         public string CreatePatch(SubversionArguments arguments)
         {
-            return @"C:\Users\vlaakso\AppData\Local\Temp\testi.diff";
+            return @"C:\test.diff";
         }
     }
 }

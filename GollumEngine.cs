@@ -51,7 +51,7 @@ namespace Aidon.Tools.Gollum
             _reviewBoardHandler = new ReviewBoardRestClient(Properties.Settings.Default.ReviewBoardUrl);
             _reviewBoardHandler.ReviewIdDiscovered += ReviewBoardHandlerOnReviewIdDiscovered;
 
-            if (!String.IsNullOrEmpty(Properties.Settings.Default.ReviewBoardUrl))
+            if (!String.IsNullOrEmpty(Properties.Settings.Default.BugzillaUrl))
             {
                 _bugzillaClient = new BugzillaRestClient(Properties.Settings.Default.BugzillaUrl);
             }

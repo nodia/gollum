@@ -5,8 +5,8 @@
     <Setting Name="ReviewBoardUrl" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://intra/reviewboard/</Value>
     </Setting>
-    <Setting Name="TargetProcessUrl" Type="System.String" Scope="User">
-      <Value Profile="(Default)">http://adata/TargetProcess2/</Value>
+    <Setting Name="BugzillaUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://intra/bugzilla/</Value>
     </Setting>
   </Settings>
 </SettingsFile>

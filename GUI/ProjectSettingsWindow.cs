@@ -19,20 +19,20 @@ namespace Aidon.Tools.Gollum.GUI
             textBoxWorkingCopyPath.SelectAll();
         }
 
-        private void Button1Click(object sender, EventArgs e)
+        private void ButtonOkClick(object sender, EventArgs e)
         {
-            infoLabel.Text = "";
+            labelInfo.Text = "";
             string workingCopyPath = textBoxWorkingCopyPath.Text;
 
             if (!Directory.Exists(workingCopyPath))
             {
-                infoLabel.Text = "The path does not exist";
+                labelInfo.Text = "The path does not exist";
                 return;
             }
 
             if (!Directory.Exists(Path.Combine(workingCopyPath, ".svn")))
             {
-                infoLabel.Text = "The path is not a working copy. There is no .svn directory.";
+                labelInfo.Text = "The path is not a working copy. There is no .svn directory.";
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace Aidon.Tools.Gollum.GUI
                     ReviewBoardRepositoryName = "ExampleReviewBoardRepositoryName"
                 };
                 ProjectSettings.Save(settings, Path.Combine(workingCopyPath, ProjectSettings.DefaultFileName));
-                infoLabel.Text = "The project specific settings file " + ProjectSettings.DefaultFileName + " created.";
+                labelInfo.Text = "The project specific settings file " + ProjectSettings.DefaultFileName + " created.";
                 OpenFileInEditor(workingCopyPath, settingsFilePath);
                 
                 LaunchTortoiseSettings();
@@ -75,7 +75,7 @@ namespace Aidon.Tools.Gollum.GUI
             tortoiseSettings.Start();
         }
 
-        private void OpenFileInEditor(string workingCopyPath, string settingsFilePath)
+        private static void OpenFileInEditor(string workingCopyPath, string settingsFilePath)
         {
             var notepad = new Process
             {
@@ -95,14 +95,14 @@ namespace Aidon.Tools.Gollum.GUI
             LaunchTortoiseSettings();
         }
 
-        private void SubmitClick(object sender, EventArgs e)
+        private void ButtonGoClick(object sender, EventArgs e)
         {
             int revisionTo;
             int revisionFrom = -1;
 
-            if (string.IsNullOrWhiteSpace(tbProjectDir.Text) || !Directory.Exists(tbProjectDir.Text) ||
-                string.IsNullOrWhiteSpace(tbRevTo.Text) || !int.TryParse(tbRevTo.Text, out revisionTo) ||
-                (!string.IsNullOrWhiteSpace(tbRevFrom.Text) && !int.TryParse(tbRevFrom.Text, out revisionFrom)) ||
+            if (string.IsNullOrWhiteSpace(textBoxProjectDirectory.Text) || !Directory.Exists(textBoxProjectDirectory.Text) ||
+                string.IsNullOrWhiteSpace(textBoxRevisionTo.Text) || !int.TryParse(textBoxRevisionTo.Text, out revisionTo) ||
+                (!string.IsNullOrWhiteSpace(textBoxRevisionFrom.Text) && !int.TryParse(textBoxRevisionFrom.Text, out revisionFrom)) ||
                 revisionFrom >= revisionTo
                 )
             {
@@ -110,7 +110,7 @@ namespace Aidon.Tools.Gollum.GUI
                 return;
             }
 
-            var cwd = tbProjectDir.Text;
+            var cwd = textBoxProjectDirectory.Text;
 
             string projectRootDirectory;
             try
@@ -148,14 +148,14 @@ namespace Aidon.Tools.Gollum.GUI
             Close();
         }
 
-        private void GroupBox2Enter(object sender, EventArgs e)
+        private void GroupBoxSubmitOldRevisionEnter(object sender, EventArgs e)
         {
-            AcceptButton = submit;
+            AcceptButton = buttonGo;
         }
 
-        private void GroupBox1Enter(object sender, EventArgs e)
+        private void GroupBoxInstallationEnter(object sender, EventArgs e)
         {
-            AcceptButton = button1;
+            AcceptButton = buttonOk;
         }
     }
 }
