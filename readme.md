@@ -1,12 +1,13 @@
 # Gollum
 
-Gollum is a graphical user interface post-commit hook tool for using TortoiseSVN, ReviewBoard and BugZilla for Windows. It provides an easy way to create a diff of a commit, post the diff to ReviewBoard and update a bug on BugZilla if one was fixed in the commit. 
+Gollum is a graphical user interface post-commit hook tool for using TortoiseSVN, Review Board and BugZilla for Windows. It provides an easy way to create a diff of a commit, post the diff to 
+Review Board and update a bug on BugZilla if one was fixed in the commit. 
 
 ## Setting up Gollum
 
 ### Configuring Gollum 
 
-To use Gollum the URL to ReviewBoard and optionally BugZilla need to be defined in the application configuration file Gollum.exe.config. The section which needs to be changed in the file looks like this:
+To use Gollum the URL to Review Board and optionally BugZilla need to be defined in the application configuration file Gollum.exe.config. The section which needs to be changed in the file looks like this:
 
 ```xml
 <userSettings>
@@ -23,7 +24,7 @@ To use Gollum the URL to ReviewBoard and optionally BugZilla need to be defined 
   </userSettings>
 ```
 
-*ReviewBoardUrl* is the url to the base address of ReviewBoard, Gollum will fill the rest of the path to the API itself.
+*ReviewBoardUrl* is the url to the base address of Review Board, Gollum will fill the rest of the path to the API itself.
 *ReviewBoardUrl* is the url to the base address of BugZilla, Gollum will fill the rest of the path to the API itself. If this is left empty the BugZilla integration will be disabled in the user interface.
 
 ### Setting up Gollum for a SVN check out
@@ -43,9 +44,9 @@ the TortoiseSVN settings window. First the gollum.xml file needs to be configure
 </ProjectSettings>
 ```
 
-*ReviewBoardRepositoryName* is the name of the repository on ReviewBoard which corresponds to this SVN repository.
-*ReviewBoardGroup* is the group on ReviewBoard to which the tickets from this SVN repository are associated with.
-*RepositoryBasePath* is the difference between the SVN path defined in ReviewBoard and the path to the SVN repository.
+*ReviewBoardRepositoryName* is the name of the repository on Review Board which corresponds to this SVN repository.
+*ReviewBoardGroup* is the group on Review Board to which the tickets from this SVN repository are associated with.
+*RepositoryBasePath* is the difference between the SVN path defined in Review Board and the path to the SVN repository.
 
 Input the correct values for these three options in the gollum.xml, save the file and close it.
 
@@ -72,7 +73,7 @@ In TortoiseSVN 1.8 (or latest trunk version) hook script can be specified in svn
 
 ## Using Gollum
 
-Gollum can be used to create a ReviewBoard ticket in two ways.
+Gollum can be used to create a Review Board ticket in two ways.
 
 When Gollum is started by running Gollum.exe without any arguments, just as when configuring a new SVN checkout, a previously commited revision or 
 revisions can be submitted. Using the "Submit old revision" part of the "Project specific settings" window do the following:
@@ -83,19 +84,19 @@ revisions can be submitted. Using the "Submit old revision" part of the "Project
 4. Press Go and the main window of Gollum will be opened to submit the ticket.
 
 The second way to use Gollum is the intended way as a post-commit hook tool which will be opened after each SVN commit. The main window of Gollum will be opened. Gollum 
-will prompt for ReviewBoard and BugZilla user credentials when they are needed. Both APIs use authentication cookies, which will be stored in the isolated storage files 
+will prompt for Review Board and BugZilla user credentials when they are needed. Both APIs use authentication cookies, which will be stored in the isolated storage files 
 so that the credentials do not need to be entered every time.
 
 The first part of the window contains the SVN commit information which was received from TortoiseSVN. This information is not editable. 
 
-The next part contains the summary, description and bugs fixed of the ReviewBoard ticket. These are automatically filled with the commit message. Review board summary will 
+The next part contains the summary, description and bugs fixed of the Review Board ticket. These are automatically filled with the commit message. Review Board summary will 
 not allow line breaks and if one is entered Gollum will show a warning and prevent sending the ticket. The bugs fixed field will check the commit message and try to detect
 if it contains bug fixes. Multiple bugs can be entered using comma as a separator. 
 
 The third part will normally be hidden. If the Bugzilla integration is active and something is entered in the bugs fixed field the third part will be shown. The first bug 
 entered in the bugs fixed field will be retrieved from Bugzilla and shown. Bug number and summary will be shown, but will not be editable. A comment can be added and the 
-bug status and resolution can be changed. A default comment will be generated containing the repository name, revision, the repository path and a link to the ReviewBoard ticket
+bug status and resolution can be changed. A default comment will be generated containing the repository name, revision, the repository path and a link to the Review Board ticket
 created.
 
-Pressing the "Post review" button will first submit the ReviewBoard ticket, copy the ticket url to the user clipboard and update bugzilla is necessary.
+Pressing the "Post review" button will first submit the Review Board ticket, copy the ticket url to the user clipboard and update bugzilla is necessary.
 
