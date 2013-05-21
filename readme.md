@@ -33,7 +33,7 @@ Gollum needs to be configured separately for each SVN checkout. This can be done
 A window called "Project specific settings" will be opened. Enter the SVN checkout working copy path in the first text field and press OK.
 
 Gollum will find the path to the gollum.exe, open the gollum.xml configuration file for the checkout in question in notepad and open 
-the TortoiseSVN settings window. First the gollum.xml file needs to be configured. This is what the created Gollum.xml file looks like this:
+the TortoiseSVN settings window. First the gollum.xml file needs to be configured. This is what the created Gollum.xml file looks like:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -61,14 +61,15 @@ below. After configuring TortoiseSVN, close the Gollum settings window. Gollum w
   - Hook Type: Post-commit hook
   - Working Copy Path
   - Command Line To Execute: The path to gollum.exe
-  - Wait for the script to finish: this should be checked
+  - Check "Wait for the script to finish"
+  - Uncheck "Hide the script while running"
 
 #### TortoiseSVN 1.8 and later
 
 In TortoiseSVN 1.8 (or latest trunk version) hook script can be specified in svn properties. This avoids the need to install the script for each developer individually.
 
-- In the repository, create property with name tsvn:postcommithook
-  - Fill in the dialog in the same way as done in the settings dialog
+- In the repository, create a property with name tsvn:postcommithook
+  - Fill in the dialog in the same way as done in the settings dialog in TortoiseSVN 1.7
   - The program can either reside in the repository or in each developers' machine, in a directory found in the PATH variable
 
 ## Using Gollum
