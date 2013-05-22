@@ -75,7 +75,16 @@ namespace Aidon.Tools.Gollum.Bugzilla
                 throw new BugzillaException("Null response from Bugzilla.");
             }
 
-            var responseXml = XDocument.Parse(response.Content);
+            XDocument responseXml;
+            try
+            {
+                responseXml = XDocument.Parse(response.Content);
+            }
+            catch (Exception)
+            {
+                throw new BugzillaException("Invalid bugzilla address " + response.ResponseUri + ".");
+            }
+
             var members = responseXml.Descendants("member");
 
             string faultCode = String.Empty;

@@ -30,8 +30,6 @@ namespace Aidon.Tools.Gollum.GUI
             _engine.UpdateStatus += EngineOnUpdateStatus;
             _engine.TicketDiscovered += EngineOnTicketDiscovered;
             _engine.CredentialsCallback += EngineOnCredentialsCallback;
-
-            FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, engine.RepositoryBasePath, engine.ReviewBoardRepositoryName);
         }
 
         #region GollumEngine event handlers
@@ -71,6 +69,7 @@ namespace Aidon.Tools.Gollum.GUI
         {
             _formShown = true;
 
+            FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
             textBoxReviewBoardSummary.Focus();
             BringToFront();
         }
@@ -246,6 +245,14 @@ namespace Aidon.Tools.Gollum.GUI
             try
             {
                 _bug = _engine.GetBugInformation(bugNumber);
+            }
+            catch (BugzillaException exception)
+            {
+                _bug = null;
+                UpdateBugFields();
+                Invoke(new Action(() => textBoxBugSummary.Text = exception.Message));
+                StopProgressBar();
+                return;
             }
             catch (Exception)
             {
