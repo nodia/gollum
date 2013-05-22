@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using System.Text;
 using Aidon.Tools.Gollum.Bugzilla;
@@ -47,13 +48,16 @@ namespace Aidon.Tools.Gollum
             _subversionArguments = subversionArguments;
 
             _patchCreator = new SvnPatchCreator();
+            
+            var reviewBoardUrl = ConfigurationManager.AppSettings["ReviewBoardUrl"];
+            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
 
-            _reviewBoardHandler = new ReviewBoardRestClient(Properties.Settings.Default.ReviewBoardUrl);
+            _reviewBoardHandler = new ReviewBoardRestClient(reviewBoardUrl);
             _reviewBoardHandler.ReviewIdDiscovered += ReviewBoardHandlerOnReviewIdDiscovered;
 
-            if (!String.IsNullOrEmpty(Properties.Settings.Default.BugzillaUrl))
+            if (!String.IsNullOrEmpty(bugzillaUrl))
             {
-                _bugzillaClient = new BugzillaRestClient(Properties.Settings.Default.BugzillaUrl);
+                _bugzillaClient = new BugzillaRestClient(bugzillaUrl);
             }
         }
 
@@ -191,22 +195,13 @@ namespace Aidon.Tools.Gollum
         /// <returns>Bugzilla bug information.</returns>
         public BugzillaBug GetBugInformation(string bugNumber)
         {
-            try
+            var arguments = new BugzillaArguments
             {
-                var arguments = new BugzillaArguments
-                {
-                    UpdateToken = bugNumber,
-                    CredentialCallback = CredentialCallback
-                };
+                UpdateToken = bugNumber,
+                CredentialCallback = CredentialCallback
+            };
 
-                var bug = _bugzillaClient.GetBugInformation(arguments);
-
-                return bug;
-            }
-            catch (BugzillaException)
-            {
-                return null;
-            }
+            return _bugzillaClient.GetBugInformation(arguments);
         }
 
         private void PostUpdate(string message)

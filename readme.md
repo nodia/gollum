@@ -7,21 +7,17 @@ Review Board and update a bug on BugZilla if one was fixed in the commit.
 
 ### Configuring Gollum 
 
-To use Gollum the URL to Review Board and optionally BugZilla need to be defined in the application configuration file Gollum.exe.config. The section which needs to be changed in the file looks like this:
+To use Gollum the URL to Review Board and optionally BugZilla need to be defined in the application configuration file Gollum.exe.config. The file looks like this:
 
 ```xml
-<userSettings>
-    <!-- URLs should point to the root of the service -->
-    <Gollum.Properties.Settings>
-      <setting name="ReviewBoardUrl" serializeAs="String">
-        <value>https://intra/reviewboard/</value>
-      </setting>
-      <setting name="BugzillaUrl" serializeAs="String">
-        <!-- leave empty to disable bugzilla integration -->    
-        <value>https://intra/bugzilla/</value>
-      </setting>
-    </Gollum.Properties.Settings>
-  </userSettings>
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <appSettings>
+        <!-- URLs should point to the root of the service -->
+        <add key="ReviewBoardUrl" value="https://intra/reviewboard/"/>
+        <add key="BugzillaUrl" value="http://aidongw/bugzilla/"/> <!-- leave empty to disable bugzilla integration -->    
+    </appSettings>
+</configuration>
 ```
 
 *ReviewBoardUrl* is the url to the base address of Review Board, Gollum will fill the rest of the path to the API itself.
