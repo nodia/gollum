@@ -35,7 +35,7 @@ namespace Aidon.Tools.Gollum.SVN
         /// <summary>
         /// Svn revision after the commit.
         /// </summary>
-        public Int32 RevisionTo { get; set; }
+        public int RevisionTo { get; set; }
 
         /// <summary>
         /// An error text or an empty string if there were no errors from subversion.

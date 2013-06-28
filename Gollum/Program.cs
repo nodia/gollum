@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net;
 using Aidon.Tools.Gollum.GUI;
@@ -76,8 +78,7 @@ namespace Aidon.Tools.Gollum
 
             try
             {
-                var engine = new GollumEngine(subversionArguments, projectSettings);
-                var form = new GollumForm(engine);
+                var form = new GollumForm(projectSettings, subversionArguments);
                 Application.Run(form);
             }
             catch (Exception e)
@@ -162,11 +163,11 @@ namespace Aidon.Tools.Gollum
 
             try
             {
-                svnArgs.Message = SvnPatchCreator.GetMessageForRevision(svnArgs);
+                svnArgs.Message = SvnPatchCreator.GetMessageForRevision(svnArgs).Result;
             }
-            catch
+            catch (Exception ex)
             {
-                Console.Error.WriteLine("Unable to get message for revision.");
+                Console.Error.WriteLine("Unable to get message for revision: " + ex.Message);
                 return null;
             }
 
@@ -180,9 +181,9 @@ namespace Aidon.Tools.Gollum
             Console.WriteLine("gollum -r revision [cwd]");
         }
 
-        private static SubversionArguments ReadTortoiseArguments(string[] args)
+        private static SubversionArguments ReadTortoiseArguments(IList<string> args)
         {
-            if (args.Length != 6)
+            if (args.Count != 6)
             {
                 ShowHelp();
                 return null;

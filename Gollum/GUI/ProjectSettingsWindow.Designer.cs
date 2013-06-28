@@ -97,7 +97,7 @@
             this.textBoxPathToExe.Name = "textBoxPathToExe";
             this.textBoxPathToExe.ReadOnly = true;
             this.textBoxPathToExe.Size = new System.Drawing.Size(458, 20);
-            this.textBoxPathToExe.TabIndex = 8;
+            this.textBoxPathToExe.TabIndex = 2;
             // 
             // labelPathToGollum
             // 
@@ -114,8 +114,8 @@
             this.buttonTortoiseSvnSettings.Location = new System.Drawing.Point(308, 136);
             this.buttonTortoiseSvnSettings.Name = "buttonTortoiseSvnSettings";
             this.buttonTortoiseSvnSettings.Size = new System.Drawing.Size(161, 23);
-            this.buttonTortoiseSvnSettings.TabIndex = 2;
-            this.buttonTortoiseSvnSettings.Text = "TortoiseSVN Settings";
+            this.buttonTortoiseSvnSettings.TabIndex = 3;
+            this.buttonTortoiseSvnSettings.Text = "TortoiseSVN Settings...";
             this.buttonTortoiseSvnSettings.UseVisualStyleBackColor = true;
             this.buttonTortoiseSvnSettings.Click += new System.EventHandler(this.ButtonTortoiseSvnSettingsClick);
             // 
@@ -164,8 +164,8 @@
             this.buttonGo.Location = new System.Drawing.Point(393, 101);
             this.buttonGo.Name = "buttonGo";
             this.buttonGo.Size = new System.Drawing.Size(75, 23);
-            this.buttonGo.TabIndex = 6;
-            this.buttonGo.Text = "Go";
+            this.buttonGo.TabIndex = 7;
+            this.buttonGo.Text = "Go...";
             this.buttonGo.UseVisualStyleBackColor = true;
             this.buttonGo.Click += new System.EventHandler(this.ButtonGoClick);
             // 
@@ -204,7 +204,7 @@
             this.textBoxRevisionTo.Location = new System.Drawing.Point(301, 74);
             this.textBoxRevisionTo.Name = "textBoxRevisionTo";
             this.textBoxRevisionTo.Size = new System.Drawing.Size(167, 20);
-            this.textBoxRevisionTo.TabIndex = 5;
+            this.textBoxRevisionTo.TabIndex = 6;
             // 
             // textBoxRevisionFrom
             // 
@@ -214,7 +214,7 @@
             this.textBoxRevisionFrom.Location = new System.Drawing.Point(301, 48);
             this.textBoxRevisionFrom.Name = "textBoxRevisionFrom";
             this.textBoxRevisionFrom.Size = new System.Drawing.Size(167, 20);
-            this.textBoxRevisionFrom.TabIndex = 4;
+            this.textBoxRevisionFrom.TabIndex = 5;
             // 
             // textBoxProjectDirectory
             // 
@@ -224,7 +224,9 @@
             this.textBoxProjectDirectory.Location = new System.Drawing.Point(95, 22);
             this.textBoxProjectDirectory.Name = "textBoxProjectDirectory";
             this.textBoxProjectDirectory.Size = new System.Drawing.Size(373, 20);
-            this.textBoxProjectDirectory.TabIndex = 3;
+            this.textBoxProjectDirectory.TabIndex = 4;
+            this.textBoxProjectDirectory.DoubleClick += new System.EventHandler(this.ProjectDirectoryDoubleClick);
+            this.textBoxProjectDirectory.MouseEnter += new System.EventHandler(this.TextBoxProjectDirectoryMouseEnter);
             // 
             // ProjectSettingsWindow
             // 
@@ -235,6 +237,9 @@
             this.Controls.Add(this.groupBoxSubmitOldRevision);
             this.Controls.Add(this.groupBoxInstallation);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(509, 366);
+            this.MinimumSize = new System.Drawing.Size(509, 366);
             this.Name = "ProjectSettingsWindow";
             this.Text = "Project specific settings";
             this.groupBoxInstallation.ResumeLayout(false);

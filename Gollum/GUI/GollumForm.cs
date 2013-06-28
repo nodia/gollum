@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Aidon.Tools.Gollum.Bugzilla;
-using Timer = System.Threading.Timer;
+using Aidon.Tools.Gollum.SVN;
 
 namespace Aidon.Tools.Gollum.GUI
 {
@@ -12,32 +15,36 @@ namespace Aidon.Tools.Gollum.GUI
     {
         private bool _formShown;
         private bool _reviewBoardDone;
-        private Timer _bugInputTimer;
-
-        private readonly GollumEngine _engine;
-
+        private GollumEngine _engine;
         private BugzillaBug _bug;
+        private CancellationTokenSource _getBugCancellation;
+        private readonly Regex _bugMatcher;
+        private readonly SubversionArguments _subversionArguments;
+        private readonly ProjectSettings _projectSettings;
 
-        public GollumForm(GollumEngine engine)
+        public GollumForm(ProjectSettings projectSettings, SubversionArguments subversionArguments)
         {
             InitializeComponent();
-
+            _projectSettings = projectSettings;
+            _subversionArguments = subversionArguments;
+            _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             Height = 567;
             groupBoxBugzilla.Visible = false;
             groupBoxBugzilla.Enabled = false;
-
-            _engine = engine;
-            _engine.UpdateStatus += EngineOnUpdateStatus;
-            _engine.TicketDiscovered += EngineOnTicketDiscovered;
-            _engine.CredentialsCallback += EngineOnCredentialsCallback;
         }
 
         #region GollumEngine event handlers
 
         private void EngineOnTicketDiscovered(string url)
         {
-            Invoke(new Action(() => Clipboard.SetText(url)));
-
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker)(() => Clipboard.SetText(url)));
+            }
+            else
+            {
+                Clipboard.SetText(url);
+            }
             if (_bug != null)
             {
                 _bug.ReviewBoardTicketLink = url;
@@ -51,27 +58,33 @@ namespace Aidon.Tools.Gollum.GUI
 
         private Credentials EngineOnCredentialsCallback(string title)
         {
-            Credentials credentials = null;
-            Invoke(new Action(() =>
-            {
-                var cw = new CredentialsWindow(title);
-                cw.ShowDialog(this);
-                credentials = cw.GetCredentials();
-            }));
-
-            return credentials;
+            var cw = new CredentialsWindow(title);
+            var result = cw.ShowDialog(this);
+            return result == DialogResult.OK ? cw.GetCredentials() : null;
         }
 
         #endregion
 
         #region Form event handlers
+
         private void GollumFormShown(object sender, EventArgs e)
         {
-            _formShown = true;
-
-            FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
-            textBoxReviewBoardSummary.Focus();
-            BringToFront();
+            try
+            {
+                _engine = new GollumEngine(_subversionArguments, _projectSettings);
+                _engine.UpdateStatus += EngineOnUpdateStatus;
+                _engine.TicketDiscovered += EngineOnTicketDiscovered;
+                _engine.CredentialsCallback += EngineOnCredentialsCallback;
+                _formShown = true;
+                FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
+                textBoxReviewBoardSummary.Focus();
+                BringToFront();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+            }
         }
 
         private void ButtonCancelClick(object sender, EventArgs e)
@@ -79,188 +92,141 @@ namespace Aidon.Tools.Gollum.GUI
             Close();
         }
 
-        private void ButtonPostReviewClick(object sender, EventArgs ea)
-        {
-            if (!_reviewBoardDone)
-            {
-                groupBoxReviewBoard.Enabled = false;
-                groupBoxBugzilla.Enabled = false;
-                buttonCancel.Enabled = false;
-                buttonPostReview.Enabled = false;
-
-                new Thread(PostToReviewBoard).Start();
-            }
-            else if (_engine.BugzillaEnabled && _bug != null)
-            {
-                new Thread(PostToBugzilla).Start();
-            }
-        }
-        #endregion
-
-        private void PostToReviewBoard()
+        private async void ButtonPostReviewClick(object sender, EventArgs ea)
         {
             try
             {
-                StartProgressBar();
-
-                if (_engine.PostToReviewBoard(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text))
+                var success = await PostReviewAsync();
+                if (success)
                 {
-                    _reviewBoardDone = true;
-
-                    if (_engine.BugzillaEnabled && _bug != null)
-                    {
-                        PostToBugzilla();
-                    }
-                    else
-                    {
-                        Invoke(new Action(Close));
-                    }
+                    Close();
                 }
-                else
-                {
-                    _reviewBoardDone = false;
-
-                    Invoke(new Action(() =>
-                        {
-                            StopProgressBar();
-                            groupBoxReviewBoard.Enabled = true;
-                            groupBoxBugzilla.Enabled = true;
-                            buttonCancel.Enabled = true;
-                            UpdateStatus("Post review", true);
-                        }));
-                }
+            }
+            catch (OperationCanceledException e)
+            {
+                MessageBox.Show(e.Message, "Operation aborted", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
             catch (Exception e)
             {
-                StopProgressBar();
-
                 if (e.Data["Error details"] != null)
                 {
                     string errorDetails = e.Data["Error details"].ToString();
-                    MessageBox.Show(
-                        e.Message + Environment.NewLine + Environment.NewLine + "Error details: " +
-                        Environment.NewLine + errorDetails, "Review board error!");
+                    MessageBox.Show(e.Message + Environment.NewLine + Environment.NewLine + "Error details: " +
+                                    Environment.NewLine + errorDetails, "Review board error!");
                 }
                 else
                 {
                     MessageBox.Show(e.Message, "An error occurred!");
                 }
-
-                Invoke(new Action(() =>
-                {
-                    StopProgressBar();
-                    buttonCancel.Enabled = true;
-                }));
-
-                UpdateStatus("An error occurred while posting review!");
             }
+        }
+
+        private void ComboBoxBugStatusSelectedValueChanged(object sender, EventArgs e)
+        {
+            if (comboBoxBugStatus.Text == "RESOLVED" || comboBoxBugStatus.Text == "VERIFIED")
+            {
+                comboBoxBugResolution.Enabled = true;
+                if (comboBoxBugResolution.Text.Length == 0)
+                {
+                    comboBoxBugResolution.Text = "FIXED";
+                }
+            }
+            else
+            {
+                comboBoxBugResolution.Text = "";
+                comboBoxBugResolution.Enabled = false;
+            }
+        }
+
+        private void TextBoxReviewBoardSummaryTextChanged(object sender, EventArgs e)
+        {
+            var summary = textBoxReviewBoardSummary.Text.Replace("\r", " ").Replace("\n", " ");
+            if (String.IsNullOrWhiteSpace(summary) || String.IsNullOrWhiteSpace(textBoxReviewBoardDescription.Text))
+            {
+                labelReviewBoardSummaryError.Visible = true;
+                UpdateStatus("Input error!");
+            }
+            else
+            {
+                if (textBoxReviewBoardSummary.Text != summary)
+                {
+                    // removed only line changes
+                    textBoxReviewBoardSummary.TextChanged -= TextBoxReviewBoardSummaryTextChanged;
+                    textBoxReviewBoardSummary.Text = summary;
+                    textBoxReviewBoardSummary.TextChanged += TextBoxReviewBoardSummaryTextChanged;
+                }
+                UpdateFixedBugsField(summary);
+                labelReviewBoardSummaryError.Visible = false;
+                UpdateStatus("Post review", true);
+            }
+        }
+
+        private void TextBoxReviewBoardDescriptionTextChanged(object sender, EventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(textBoxReviewBoardDescription.Text) || String.IsNullOrWhiteSpace(textBoxReviewBoardSummary.Text))
+            {
+                labelReviewBoardSummaryError.Visible = true;
+                UpdateStatus("Input error!");
+            }
+            else
+            {
+                labelReviewBoardSummaryError.Visible = false;
+                UpdateStatus("Post review", true);
+            }
+        }
+
+        private async void TextBoxBugsFixedTextChanged(object sender, EventArgs e)
+        {
+            await SetBugDisplay().ConfigureAwait(false);
+        }
+
+        private void GollumFormFormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_getBugCancellation != null)
+            {
+                _getBugCancellation.Dispose();
+            }
+        }
+
+        #endregion
+
+        private async Task<bool> PostToReviewBoard()
+        {
+            StartProgressBar();
+            bool success = await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text).ConfigureAwait(false);
+            _reviewBoardDone = success;
+            return success;
         }
 
         private void StartProgressBar()
         {
-            Invoke(new Action(() =>
-                {
-                    progressBar.Style = ProgressBarStyle.Marquee;
-                    progressBar.MarqueeAnimationSpeed = 30;
-                }));
+            progressBar.Style = ProgressBarStyle.Marquee;
+            progressBar.MarqueeAnimationSpeed = 30;
         }
 
         private void StopProgressBar()
         {
-            Invoke(new Action(() =>
-            {
-                progressBar.Style = ProgressBarStyle.Continuous;
-                progressBar.MarqueeAnimationSpeed = 0;
-            }));
+            progressBar.Style = ProgressBarStyle.Continuous;
+            progressBar.MarqueeAnimationSpeed = 0;
         }
 
-        private void PostToBugzilla()
+        private async Task<bool> PostToBugzillaAsync()
         {
-            try
+            if (_bug == null)
             {
-                if (_bug == null)
-                {
-                    Invoke(new Action(Close));
-                    return;
-                }
-
-                string resolution = null;
-                string status = null;
-                Invoke(
-                    new Action(
-                        () =>
-                            {
-                                resolution = comboBoxBugResolution.GetItemText(comboBoxBugResolution.SelectedItem);
-                                status = comboBoxBugStatus.GetItemText(comboBoxBugStatus.SelectedItem);
-                            }));
-
-                if (_engine.PostToBugzilla(textBoxBugNumber.Text,
-                                           resolution,
-                                           status,
-                                           ConvertBugzillaComment(textBoxBugComment.Text),
-                                           _bug.UpdateToken))
-                {
-                    Invoke(new Action(Close));
-                }
-                else
-                {
-                    Invoke(new Action(() =>
-                        {
-                            StopProgressBar();
-                            groupBoxReviewBoard.Enabled = true;
-                            buttonCancel.Enabled = true;
-                        }));
-
-                    UpdateStatus("Update bug", true);
-                }
-            }
-            catch (Exception e)
-            {
-                StopProgressBar();
-
-                if (e.Data["Error details"] != null)
-                {
-                    string errorDetails = e.Data["Error details"].ToString();
-                    MessageBox.Show(
-                        e.Message + Environment.NewLine + Environment.NewLine + "Error details: " +
-                        Environment.NewLine + errorDetails, "Bugzilla error!");
-                }
-                else
-                {
-                    MessageBox.Show(e.Message, "An error occurred!");
-                }
-
-                Invoke(new Action(() =>
-                {
-                    StopProgressBar();
-                    buttonCancel.Enabled = true;
-                }));
-
-                UpdateStatus("An error occurred while updating bug!");
-            }
-        }
-
-        private void GetBugInformation(string bugNumber)
-        {
-            try
-            {
-                _bug = _engine.GetBugInformation(bugNumber);
-            }
-            catch (BugzillaException exception)
-            {
-                _bug = null;
-                UpdateBugFields();
-                Invoke(new Action(() => textBoxBugSummary.Text = exception.Message));
-                StopProgressBar();
-                return;
-            }
-            catch (Exception)
-            {
-                _bug = null;
+                return true;
             }
 
-            UpdateBugFields();
-            StopProgressBar();
+            string token = _bug.UpdateToken;
+            string resolution = comboBoxBugResolution.GetItemText(comboBoxBugResolution.SelectedItem);
+            string status = comboBoxBugStatus.GetItemText(comboBoxBugStatus.SelectedItem);
+
+            var bugZillaComment = ConvertBugzillaComment(textBoxBugComment.Text);
+            return await _engine.PostToBugzillaAsync(textBoxBugNumber.Text,
+                                                     resolution,
+                                                     status,
+                                                     bugZillaComment,
+                                                     token).ConfigureAwait(false);
         }
 
         private string ConvertBugzillaComment(string comment)
@@ -272,11 +238,19 @@ namespace Aidon.Tools.Gollum.GUI
         {
             if (_formShown)
             {
-                Invoke(new Action(() =>
+                if (buttonPostReview.InvokeRequired)
+                {
+                    buttonPostReview.Invoke((MethodInvoker) delegate
+                    {
+                        buttonPostReview.Text = message;
+                        buttonPostReview.Enabled = enabled;
+                    });
+                }
+                else
                 {
                     buttonPostReview.Text = message;
                     buttonPostReview.Enabled = enabled;
-                }));
+                }
             }
         }
 
@@ -306,12 +280,20 @@ namespace Aidon.Tools.Gollum.GUI
             textBoxSVNBranch.Text = branch;
             textBoxReviewBoardDescription.Text = commitMessage;
             textBoxReviewBoardSummary.Text = commitMessage;
+        }
 
-            if (commitMessage.ToLower().Contains("bug") && commitMessage.ToLower().Contains("fix"))
+        private void UpdateFixedBugsField(string commitMessage)
+        {
+            string bugs = String.Empty;
+            var result = _bugMatcher.Match(commitMessage);
+            while (result.Success)
             {
-                var resultString = Regex.Match(commitMessage, @"\d+").Value;
-                textBoxBugsFixed.Text = resultString;
-                textBoxBugNumber.Text = resultString;
+                bugs += result + " ";
+                result = result.NextMatch();
+            }
+            if (bugs != String.Empty && bugs != textBoxBugsFixed.Text)
+            {
+                textBoxBugsFixed.Text = bugs.Trim();
             }
         }
 
@@ -319,116 +301,158 @@ namespace Aidon.Tools.Gollum.GUI
         {
             if (_bug == null)
             {
-                Invoke(new Action(() =>
-                    {
-                        textBoxBugNumber.Text = String.Empty;
-                        textBoxBugSummary.Text = String.Empty;
-                        comboBoxBugStatus.Text = String.Empty;
-                        comboBoxBugResolution.Text = String.Empty;
-                        textBoxBugComment.Text = String.Empty;
-                    }));
+                textBoxBugNumber.Text = String.Empty;
+                textBoxBugSummary.Text = String.Empty;
+                comboBoxBugStatus.Text = String.Empty;
+                comboBoxBugResolution.Text = String.Empty;
+                textBoxBugComment.Text = String.Empty;
             }
             else
             {
-                Invoke(new Action(() =>
-                    {
-                        textBoxBugSummary.ForeColor = System.Drawing.Color.Black;
+                textBoxBugSummary.ForeColor = Color.Black;
+                textBoxBugSummary.Text = _bug.Summary;
+                comboBoxBugStatus.Text = _bug.Status;
+                comboBoxBugResolution.Text = _bug.Resolution;
 
-                        textBoxBugSummary.Text = _bug.Summary;
-                        comboBoxBugStatus.Text = _bug.Status;
-                        comboBoxBugResolution.Text = _bug.Resolution;
-
-                        textBoxBugComment.Text = "Fixed in " + _engine.ReviewBoardRepositoryName + " revision " +
-                                                       _engine.CommitRevisionTo + " of " +
-                                                       _engine.RepositoryBasePath + Environment.NewLine +
-                                                       "[ReviewBoardTicketUrl]" + Environment.NewLine +
-                                                       Environment.NewLine +
-                                                       _engine.CommitMessage;
-                    }));
+                textBoxBugComment.Text = "Fixed in " + _engine.ReviewBoardRepositoryName + " revision " +
+                                         _engine.CommitRevisionTo + " of " +
+                                         _engine.RepositoryBasePath + Environment.NewLine +
+                                         "[ReviewBoardTicketUrl]" + Environment.NewLine +
+                                         Environment.NewLine +
+                                         _engine.CommitMessage;
             }
-
+            ToggleBugzillaVisibility(_bug != null);
             UpdateStatus("Post review", true);
         }
 
-        private void ComboBoxBugStatusSelectedValueChanged(object sender, EventArgs e)
+        private async Task SetBugDisplay()
         {
-            if (comboBoxBugStatus.Text == "RESOLVED" || comboBoxBugStatus.Text == "VERIFIED")
+            _bug = null;
+
+            try
             {
-                comboBoxBugResolution.Enabled = true;
-                if (comboBoxBugResolution.Text.Length == 0)
+                InitializeCancellation();
+                _bug = await GetBugInformationAsync(1500);
+            }
+            catch (Exception ex)
+            {
+                _bug = null;
+                if (ex is BugzillaException)
                 {
-                    comboBoxBugResolution.Text = "FIXED";
+                    textBoxBugSummary.Text = ex.Message;
+                }
+                else if (!(ex is ObjectDisposedException || ex is OperationCanceledException))
+                {
+                    UpdateStatus("Could not get bug status.", true);
                 }
             }
-            else
+            finally
             {
-                comboBoxBugResolution.Text = "";
-                comboBoxBugResolution.Enabled = false;
+                UpdateBugFields();
+                StopProgressBar();
             }
         }
 
-        private void TextBoxReviewBoardSummaryTextChanged(object sender, EventArgs e)
-        {
-            var summary = textBoxReviewBoardSummary.Text;
-            if (summary.Contains(Environment.NewLine) || summary.Contains("\r") || summary.Contains("\n"))
-            {
-                labelReviewBoardSummaryError.Visible = true;
-                UpdateStatus("Input error!");
-            }
-            else
-            {
-                labelReviewBoardSummaryError.Visible = false;
-                UpdateStatus("Post review", true);
-            }
-        }
-
-        private void TextBoxBugsFixedTextChanged(object sender, EventArgs e)
-        {
-            UpdateStatus("Loading bug information...");
-            StartProgressBar();
-
-            if (_bugInputTimer == null)
-            {
-                _bugInputTimer = new Timer(BugInputDetected, null, 1500, Timeout.Infinite);
-            }
-            else
-            {
-                _bugInputTimer.Change(1500, Timeout.Infinite);
-            }
-        }
-
-        private void BugInputDetected(object state)
-        {
-            Invoke(new Action(SetBugDisplay));
-        }
-
-        private void SetBugDisplay()
+        private void InitializeCancellation()
         {
             try
             {
-                if (textBoxBugsFixed.Text.Length > 0)
+                if (_getBugCancellation != null)
                 {
-                    groupBoxBugzilla.Visible = true;
-                    groupBoxBugzilla.Enabled = true;
-                    Height = 780;
-
-                    string number = Regex.Match(textBoxBugsFixed.Text, @"\d+").Value;
-                    textBoxBugNumber.Text = number;
-                    new Thread(() => GetBugInformation(number)).Start();
-                }
-                else
-                {
-                    groupBoxBugzilla.Visible = false;
-                    groupBoxBugzilla.Enabled = false;
-                    Height = 567;
-
-                    UpdateBugFields();
-                    StopProgressBar();
+                    _getBugCancellation.Cancel();
+                    _getBugCancellation.Dispose();
                 }
             }
             catch (Exception)
             {
+            }
 
+            _getBugCancellation = new CancellationTokenSource();
+        }
+
+        private async Task<BugzillaBug> GetBugInformationAsync(int delay)
+        {
+            var cancel = _getBugCancellation;
+            // Delays the user input without blocking the GUI thread
+            await Task.Delay(delay, cancel.Token);
+            cancel.Token.ThrowIfCancellationRequested();
+
+            if (textBoxBugsFixed.Text.Length > 0)
+            {
+                var numbers = textBoxBugsFixed.Text.Split(new [] { " ", "," }, StringSplitOptions.RemoveEmptyEntries);
+                uint test;
+                if (numbers.Length != 0 && UInt32.TryParse(numbers.First().Trim(), out test))
+                {
+                    ToggleBugzillaVisibility(false);
+                    UpdateStatus("Loading bug information...");
+                    StartProgressBar();
+                    textBoxBugNumber.Text = numbers.First();
+                    cancel.CancelAfter(TimeSpan.FromSeconds(60));
+                    return await _engine.GetBugInformationAsync(textBoxBugNumber.Text, cancel.Token).ConfigureAwait(false);
+                }
+            }
+            return null;
+        }
+
+        private void ToggleBugzillaVisibility(bool visible)
+        {
+            groupBoxBugzilla.Visible = visible;
+            groupBoxBugzilla.Enabled = visible;
+            var size = visible ? new Size(Width, 780) : new Size(Width, 567);
+            MaximumSize = size;
+            MinimumSize = size;
+        }
+
+        private async Task<bool> PostReviewAsync()
+        {
+            bool success = true;
+            try
+            {
+                StartProgressBar();
+
+                if (!_reviewBoardDone)
+                {
+                    groupBoxReviewBoard.Enabled = false;
+                    groupBoxBugzilla.Enabled = false;
+                    buttonCancel.Enabled = false;
+                    buttonPostReview.Enabled = false;
+                    success = await PostToReviewBoard();
+                }
+
+                if (success && _engine.BugzillaEnabled && _bug != null)
+                {
+                    success = await PostToBugzillaAsync();
+                }
+
+                return success;
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            finally
+            {
+                StopProgressBar();
+                if (!success)
+                {
+                    groupBoxReviewBoard.Enabled = true;
+                    if (_engine.BugzillaEnabled && _bug != null)
+                    {
+                        ToggleBugzillaVisibility(true);
+                    }
+                    buttonCancel.Enabled = true;
+                    buttonPostReview.Enabled = true;
+                    if (_reviewBoardDone)
+                    {
+                        UpdateStatus("Update bug", true);
+                    }
+                    else
+                    {
+                        UpdateStatus("Post review", true);
+                    }
+                }
             }
         }
     }

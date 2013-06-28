@@ -8,6 +8,8 @@ namespace Aidon.Tools.Gollum.GUI
 {
     public partial class ProjectSettingsWindow : Form
     {
+        private readonly ToolTip _projectToolTip;
+
         public ProjectSettings ProjectSettings { get; set; }
         public SubversionArguments SubversionArguments { get; set; }
 
@@ -17,6 +19,16 @@ namespace Aidon.Tools.Gollum.GUI
 
             textBoxWorkingCopyPath.Text = Directory.GetCurrentDirectory();
             textBoxWorkingCopyPath.SelectAll();
+
+            _projectToolTip = new ToolTip
+            {
+                IsBalloon = false, 
+                UseAnimation = true, 
+                ToolTipIcon = ToolTipIcon.Info, 
+                AutoPopDelay = 5000, 
+                InitialDelay = 500, 
+                ToolTipTitle = "Tip"
+            };
         }
 
         private void ButtonOkClick(object sender, EventArgs e)
@@ -45,14 +57,14 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 var settings = new ProjectSettings
                 {
-                    RepositoryBasePath = "/",
-                    ReviewBoardGroup = "ExampleReviewBoardGroup",
-                    ReviewBoardRepositoryName = "ExampleReviewBoardRepositoryName"
+                        RepositoryBasePath = "/",
+                        ReviewBoardGroup = "ExampleReviewBoardGroup",
+                        ReviewBoardRepositoryName = "ExampleReviewBoardRepositoryName"
                 };
                 ProjectSettings.Save(settings, Path.Combine(workingCopyPath, ProjectSettings.DefaultFileName));
                 labelInfo.Text = "The project specific settings file " + ProjectSettings.DefaultFileName + " created.";
                 OpenFileInEditor(workingCopyPath, settingsFilePath);
-                
+
                 LaunchTortoiseSettings();
             }
             else
@@ -65,11 +77,11 @@ namespace Aidon.Tools.Gollum.GUI
         {
             var tortoiseSettings = new Process
             {
-                StartInfo =
+                    StartInfo =
                     {
-                        FileName = "tortoiseproc",
-                        Arguments = "/command:settings",
-                        UseShellExecute = true
+                            FileName = "tortoiseproc",
+                            Arguments = "/command:settings",
+                            UseShellExecute = true
                     }
             };
             tortoiseSettings.Start();
@@ -79,12 +91,12 @@ namespace Aidon.Tools.Gollum.GUI
         {
             var notepad = new Process
             {
-                StartInfo =
+                    StartInfo =
                     {
-                        FileName = "notepad",
-                        Arguments = settingsFilePath,
-                        WorkingDirectory = workingCopyPath,
-                        UseShellExecute = true
+                            FileName = "notepad",
+                            Arguments = settingsFilePath,
+                            WorkingDirectory = workingCopyPath,
+                            UseShellExecute = true
                     }
             };
             notepad.Start();
@@ -95,7 +107,7 @@ namespace Aidon.Tools.Gollum.GUI
             LaunchTortoiseSettings();
         }
 
-        private void ButtonGoClick(object sender, EventArgs e)
+        private async void ButtonGoClick(object sender, EventArgs e)
         {
             int revisionTo;
             int revisionFrom = -1;
@@ -104,7 +116,7 @@ namespace Aidon.Tools.Gollum.GUI
                 string.IsNullOrWhiteSpace(textBoxRevisionTo.Text) || !int.TryParse(textBoxRevisionTo.Text, out revisionTo) ||
                 (!string.IsNullOrWhiteSpace(textBoxRevisionFrom.Text) && !int.TryParse(textBoxRevisionFrom.Text, out revisionFrom)) ||
                 revisionFrom >= revisionTo
-                )
+                    )
             {
                 MessageBox.Show("Fill fields better");
                 return;
@@ -125,19 +137,22 @@ namespace Aidon.Tools.Gollum.GUI
 
             var subversionArguments = new SubversionArguments
             {
-                RevisionTo = revisionTo,
-                RevisionFrom = revisionFrom,
-                Cwd = cwd,
-                LocalProjectRootDirectory = projectRootDirectory
+                    RevisionTo = revisionTo,
+                    RevisionFrom = revisionFrom,
+                    Cwd = cwd,
+                    LocalProjectRootDirectory = projectRootDirectory
             };
+
+            buttonGo.Enabled = false;
 
             try
             {
-                subversionArguments.Message = SvnPatchCreator.GetMessageForRevision(subversionArguments);
+                subversionArguments.Message = await SvnPatchCreator.GetMessageForRevision(subversionArguments);
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show("Unable to get message for revision.");
+                MessageBox.Show("Unable to get message for revision: " + ex.Message);
+                buttonGo.Enabled = true;
                 return;
             }
 
@@ -156,6 +171,42 @@ namespace Aidon.Tools.Gollum.GUI
         private void GroupBoxInstallationEnter(object sender, EventArgs e)
         {
             AcceptButton = buttonOk;
+        }
+
+        private void ProjectDirectoryDoubleClick(object sender, EventArgs e)
+        {
+            using (var openDirDialog = new FolderBrowserDialog())
+            {
+                openDirDialog.ShowNewFolderButton = false;
+                openDirDialog.Description = "Select project directory";
+                
+                var result = openDirDialog.ShowDialog(this);
+                if (result != DialogResult.OK)
+                {
+                    return;
+                }
+
+                var dir = openDirDialog.SelectedPath;
+                if (String.IsNullOrEmpty(dir))
+                {
+                    return;
+                }
+
+                if (!dir.EndsWith("\\", StringComparison.Ordinal))
+                {
+                    dir += "\\";
+                }
+
+                textBoxProjectDirectory.Text = dir;
+            }
+        }
+
+        private void TextBoxProjectDirectoryMouseEnter(object sender, EventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(textBoxProjectDirectory.Text))
+            {
+                _projectToolTip.Show("Double click to browse for folder.", textBoxProjectDirectory);
+            }
         }
     }
 }

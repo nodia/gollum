@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Aidon.Tools.Gollum.Bugzilla;
 using Aidon.Tools.Gollum.ReviewBoard;
 using Aidon.Tools.Gollum.SVN;
@@ -44,20 +46,30 @@ namespace Aidon.Tools.Gollum
 
         public GollumEngine(SubversionArguments subversionArguments, ProjectSettings projectSettings)
         {
+            var reviewBoardUrl = ConfigurationManager.AppSettings["ReviewBoardUrl"];
+
+            if (String.IsNullOrEmpty(reviewBoardUrl))
+            {
+                throw new InvalidOperationException("ReviewBoard url is required.");
+            }
+            
+            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
+
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
 
             _patchCreator = new SvnPatchCreator();
-            
-            var reviewBoardUrl = ConfigurationManager.AppSettings["ReviewBoardUrl"];
-            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
+            //_patchCreator = new DummyPatchCreator();
 
             _reviewBoardHandler = new ReviewBoardRestClient(reviewBoardUrl);
+            //_reviewBoardHandler = new DummyReviewBoardHandler();
+
             _reviewBoardHandler.ReviewIdDiscovered += ReviewBoardHandlerOnReviewIdDiscovered;
 
             if (!String.IsNullOrEmpty(bugzillaUrl))
             {
                 _bugzillaClient = new BugzillaRestClient(bugzillaUrl);
+                //_bugzillaClient = new DummyBugzillaRestClient();
             }
         }
 
@@ -115,32 +127,33 @@ namespace Aidon.Tools.Gollum
         /// <param name="summary">The review summary.</param>
         /// <param name="description">The review description.</param>
         /// <param name="bugs">The review fixed bugs.</param>
-        /// <returns></returns>
-        public bool PostToReviewBoard(string summary, string description, string bugs)
+        /// <returns>
+        /// True if posting to review board succeeds; otherwise, false.
+        /// </returns>
+        public async Task<bool> PostToReviewBoardAsync(string summary, string description, string bugs)
         {
             try
             {
                 PostUpdate("Creating diff...");
 
-                string patch = _patchCreator.CreatePatch(_subversionArguments);
+                string patch = await _patchCreator.CreatePatchAsync(_subversionArguments).ConfigureAwait(false);
 
                 PostUpdate("Diff created. Creating review ticket...");
 
                 var arguments = new ReviewBoardArguments
-                    {
-                        CredentialCallback = CredentialCallback,
-                        Description = description,
-                        Group = _projectSettings.ReviewBoardGroup,
-                        BaseDirectory = FigureOutRepositoryPath(),
-                        Repository = _projectSettings.ReviewBoardRepositoryName,
-                        Summary = summary,
-                        Bugs = bugs,
-                        DiffFile = patch
-                    };
+                {
+                    CredentialCallback = CredentialCallback,
+                    Description = description,
+                    Group = _projectSettings.ReviewBoardGroup,
+                    BaseDirectory = FigureOutRepositoryPath(),
+                    Repository = _projectSettings.ReviewBoardRepositoryName,
+                    Summary = summary,
+                    Bugs = bugs,
+                    DiffFile = patch
+                };
 
-                _reviewBoardHandler.PostToReviewBoard(arguments);
-
-                return true;
+                var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
+                return response != null;
             }
             catch (ReviewBoardAuthenticationException)
             {
@@ -157,7 +170,7 @@ namespace Aidon.Tools.Gollum
         }
 
         /// <summary>
-        /// Posts an bug update to bugzilla.
+        /// Posts a bug update to bugzilla.
         /// </summary>
         /// <param name="bugNumber">The bug number.</param>
         /// <param name="resolution">The resolution.</param>
@@ -165,43 +178,39 @@ namespace Aidon.Tools.Gollum
         /// <param name="comment">The comment.</param>
         /// <param name="updateToken">The update token.</param>
         /// <returns></returns>
-        public bool PostToBugzilla(string bugNumber, string resolution, string status, string comment, string updateToken)
+        public async Task<bool> PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
         {
-            try
+            UpdateStatus("Updating Bugzilla...");
+            var arguments = new BugzillaArguments
             {
-                UpdateStatus("Updating Bugzilla...");
-                var arguments = new BugzillaArguments
-                {
-                    BugId = bugNumber,
-                    UpdateToken = updateToken,
-                    Comment = comment,
-                    Resolution = resolution,
-                    Status = status
-                };
+                BugId = bugNumber,
+                UpdateToken = updateToken,
+                Comment = comment,
+                Resolution = resolution,
+                Status = status
+            };
 
-                _bugzillaClient.PostToBugzilla(arguments);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return await _bugzillaClient.PostToBugzillaAsync(arguments).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Gets the bug information.
         /// </summary>
         /// <param name="bugNumber">The bug number.</param>
-        /// <returns>Bugzilla bug information.</returns>
-        public BugzillaBug GetBugInformation(string bugNumber)
+        /// <param name="token">The token.</param>
+        /// <returns>
+        /// Bugzilla bug information.
+        /// </returns>
+        public async Task<BugzillaBug> GetBugInformationAsync(string bugNumber, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
             var arguments = new BugzillaArguments
             {
                 UpdateToken = bugNumber,
                 CredentialCallback = CredentialCallback
             };
 
-            return _bugzillaClient.GetBugInformation(arguments);
+            return await _bugzillaClient.GetBugInformationAsync(arguments, token).ConfigureAwait(false);
         }
 
         private void PostUpdate(string message)
@@ -214,12 +223,7 @@ namespace Aidon.Tools.Gollum
 
         private Credentials CredentialCallback(string title)
         {
-            if (CredentialsCallback == null)
-            {
-                return null;
-            }
-
-            return CredentialsCallback(title);
+            return CredentialsCallback == null ? null : CredentialsCallback(title);
         }
 
         private string FigureOutRepositoryPath()
@@ -233,7 +237,7 @@ namespace Aidon.Tools.Gollum
         private static string CombinePathsInUnixFormat(string basePath, string relativePath)
         {
             var result = new StringBuilder(basePath);
-            if (!(basePath.EndsWith("/") || relativePath.StartsWith("/")))
+            if (!(basePath.EndsWith("/") || relativePath.StartsWith("/", StringComparison.Ordinal)))
             {
                 result.Append('/');
             }

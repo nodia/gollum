@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using RestSharp;
 
@@ -11,64 +13,69 @@ namespace Aidon.Tools.Gollum.Bugzilla
         {
         }
 
-        public void PostToBugzilla(BugzillaArguments arguments)
+        public async Task<bool> PostToBugzillaAsync(BugzillaArguments arguments)
         {
-            Login(arguments);
-            UpdateBug(arguments);
-        }
-
-        private void Login(BugzillaArguments arguments)
-        {
-            try
+            bool loginSuccess = await Login(arguments).ConfigureAwait(false);
+            if (!loginSuccess)
             {
-                if (arguments.CredentialCallback == null) return;
-                
-                if (ReadCookies()) return;
-
-                var credentials = arguments.CredentialCallback("Bugzilla login");
-                SendLoginRequest(credentials.Username, credentials.Password);
+                return false;
             }
-            catch (BugzillaAuthenticationException)
-            {
-                Login(arguments);
-            }
-        }
 
-        private void UpdateBug(BugzillaArguments arguments)
-        {
             var updateStatus = new XmlRequest
             {
                 Method = "Bug.update",
                 Parameters =
-                        {
-                            new XmlParameter {Name = "ids", Value = new[] { arguments.BugId  }},
-                            new XmlParameter {Name = "status", Value = arguments.Status},
-                            new XmlParameter {Name = "resolution", Value = arguments.Resolution}
-                        }
+                {
+                    new XmlParameter {Name = "ids", Value = new[] { arguments.BugId  }},
+                    new XmlParameter {Name = "status", Value = arguments.Status},
+                    new XmlParameter {Name = "resolution", Value = arguments.Resolution}
+                }
             };
 
-            var statusRequest = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
-            statusRequest.AddParameter("text/xml", updateStatus.ToString(), ParameterType.RequestBody);
-            var statusResponse = Client.Execute(statusRequest);
-            CheckResponse(statusResponse);
-            
-            var addComment = new XmlRequest
+            using (var tokenSource = new CancellationTokenSource())
             {
-                Method = "Bug.add_comment",
-                Parameters =
-                        {
-                            new XmlParameter {Name = "id", Value = arguments.BugId},
-                            new XmlParameter {Name = "comment", Value = arguments.Comment}
-                        }
-            };
+                var statusRequest = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
+                statusRequest.AddParameter("text/xml", updateStatus.ToString(), ParameterType.RequestBody);
 
-            var commentRequest = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
-            commentRequest.AddParameter("text/xml", addComment.ToString(), ParameterType.RequestBody);
-            var commentResponse = Client.Execute(commentRequest);
-            CheckResponse(commentResponse);
+                tokenSource.CancelAfter(DefaultTimeout);
+                var statusResponse = await ExecuteAsync(statusRequest, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(statusResponse);
+
+                var addComment = new XmlRequest
+                {
+                    Method = "Bug.add_comment",
+                    Parameters =
+                    {
+                        new XmlParameter { Name = "id", Value = arguments.BugId },
+                        new XmlParameter { Name = "comment", Value = arguments.Comment }
+                    }
+                };
+
+                var commentRequest = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
+                commentRequest.AddParameter("text/xml", addComment.ToString(), ParameterType.RequestBody);
+
+                var commentResponse = await ExecuteAsync(commentRequest, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(commentResponse);
+            }
+            return true;
         }
 
-        private void CheckResponse(RestResponse response)
+        private async Task<bool> Login(BugzillaArguments arguments)
+        {
+            if (ReadCookies())
+            {
+                return true;
+            }
+
+            if (arguments.CredentialCallback == null)
+            {
+                return false;
+            }
+            var credentials = arguments.CredentialCallback("Bugzilla login");
+            return await SendLoginRequestAsync(credentials.Username, credentials.Password).ConfigureAwait(false);
+        }
+
+        private void CheckResponse(IRestResponse response)
         {
             if (response == null)
             {
@@ -131,49 +138,65 @@ namespace Aidon.Tools.Gollum.Bugzilla
             ProcessResponseCookies(response);
         }
 
-        private void SendLoginRequest(string username, string password)
+        private async Task<bool> SendLoginRequestAsync(string username, string password)
         {
             var xml = new XmlRequest
             {
                 Method = "User.login",
                 Parameters =
-                        {
-                            new XmlParameter {Name = "login", Value = username},
-                            new XmlParameter {Name = "password", Value = password}
-                        }
+                {
+                    new XmlParameter { Name = "login", Value = username },
+                    new XmlParameter { Name = "password", Value = password }
+                }
             };
 
             var request = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
             request.AddParameter("text/xml", xml.ToString(), ParameterType.RequestBody);
 
-            var response = Client.Execute(request);
-            CheckResponse(response);
+            try
+            {
+                using (var tokenSource = new CancellationTokenSource())
+                {
+                    tokenSource.CancelAfter(DefaultTimeout);
+                    var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
+                    CheckResponse(response);
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
-        public BugzillaBug GetBugInformation(BugzillaArguments arguments)
+        public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationToken token)
         {
-            Login(arguments);
-            return GetBug(arguments.UpdateToken);
-        }
+            token.ThrowIfCancellationRequested();
 
-        private BugzillaBug GetBug(string bugId)
-        {
+            bool loginSuccess = await Login(arguments).ConfigureAwait(false);
+            if (!loginSuccess)
+            {
+                return null;
+            }
+
+            token.ThrowIfCancellationRequested();
+
             var xml = new XmlRequest
             {
                 Method = "Bug.get",
                 Parameters =
-                        {
-                            new XmlParameter {Name = "ids", Value = new[] { bugId }}
-                        }
+                {
+                    new XmlParameter {Name = "ids", Value = new[] { arguments.UpdateToken }}
+                }
             };
 
             var request = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
             request.AddParameter("text/xml", xml.ToString(), ParameterType.RequestBody);
 
-            var response = Client.Execute(request);
+            var response = await ExecuteAsync(request, token).ConfigureAwait(false);
             CheckResponse(response);
-
             return new BugzillaBug(response.Content);
+            
         }
     }
 }

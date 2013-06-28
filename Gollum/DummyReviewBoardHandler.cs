@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Aidon.Tools.Gollum.ReviewBoard;
 
 namespace Aidon.Tools.Gollum
 {
     class DummyReviewBoardHandler : IReviewBoardHandler
     {
-        public ReviewBoardResponse PostToReviewBoard(ReviewBoardArguments arguments)
+        public async Task<ReviewBoardResponse> PostToReviewBoardAsync(ReviewBoardArguments arguments)
         {
-            Thread.Sleep(3000);
-            var creds = arguments.CredentialCallback.Invoke("Review Board login");
-
+            await Task.Delay(1000);
+            arguments.CredentialCallback("Review Board login");
+            await Task.Delay(2000).ConfigureAwait(false);
             return new ReviewBoardResponse();
         }
 

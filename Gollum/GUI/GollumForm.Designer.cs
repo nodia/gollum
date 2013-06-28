@@ -45,6 +45,10 @@ namespace Aidon.Tools.Gollum.GUI
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.groupBoxPostReview = new System.Windows.Forms.GroupBox();
             this.groupBoxSVN = new System.Windows.Forms.GroupBox();
+            this.textBoxSVNBranch = new System.Windows.Forms.TextBox();
+            this.labelBranch = new System.Windows.Forms.Label();
+            this.textBoxSVNRepository = new System.Windows.Forms.TextBox();
+            this.labelOf = new System.Windows.Forms.Label();
             this.textBoxCommitMessage = new System.Windows.Forms.TextBox();
             this.labelTo = new System.Windows.Forms.Label();
             this.labelFrom = new System.Windows.Forms.Label();
@@ -61,10 +65,6 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelBugComment = new System.Windows.Forms.Label();
             this.textBoxBugComment = new System.Windows.Forms.TextBox();
             this.textBoxBugSummary = new System.Windows.Forms.TextBox();
-            this.labelOf = new System.Windows.Forms.Label();
-            this.textBoxSVNRepository = new System.Windows.Forms.TextBox();
-            this.labelBranch = new System.Windows.Forms.Label();
-            this.textBoxSVNBranch = new System.Windows.Forms.TextBox();
             this.groupBoxPostReview.SuspendLayout();
             this.groupBoxSVN.SuspendLayout();
             this.groupBoxReviewBoard.SuspendLayout();
@@ -95,8 +95,10 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxReviewBoardDescription.Location = new System.Drawing.Point(12, 125);
             this.textBoxReviewBoardDescription.Multiline = true;
             this.textBoxReviewBoardDescription.Name = "textBoxReviewBoardDescription";
+            this.textBoxReviewBoardDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxReviewBoardDescription.Size = new System.Drawing.Size(617, 153);
             this.textBoxReviewBoardDescription.TabIndex = 2;
+            this.textBoxReviewBoardDescription.TextChanged += new System.EventHandler(this.TextBoxReviewBoardDescriptionTextChanged);
             // 
             // buttonPostReview
             // 
@@ -124,9 +126,9 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelReviewBoardSummaryError.ForeColor = System.Drawing.Color.Red;
             this.labelReviewBoardSummaryError.Location = new System.Drawing.Point(142, 21);
             this.labelReviewBoardSummaryError.Name = "labelReviewBoardSummaryError";
-            this.labelReviewBoardSummaryError.Size = new System.Drawing.Size(156, 13);
+            this.labelReviewBoardSummaryError.Size = new System.Drawing.Size(342, 13);
             this.labelReviewBoardSummaryError.TabIndex = 6;
-            this.labelReviewBoardSummaryError.Text = "Line breaks are not allowed!";
+            this.labelReviewBoardSummaryError.Text = "Review board summary and description are required!";
             this.labelReviewBoardSummaryError.Visible = false;
             // 
             // textBoxReviewBoardSummary
@@ -136,6 +138,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxReviewBoardSummary.Location = new System.Drawing.Point(12, 37);
             this.textBoxReviewBoardSummary.Multiline = true;
             this.textBoxReviewBoardSummary.Name = "textBoxReviewBoardSummary";
+            this.textBoxReviewBoardSummary.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxReviewBoardSummary.Size = new System.Drawing.Size(617, 66);
             this.textBoxReviewBoardSummary.TabIndex = 5;
             this.textBoxReviewBoardSummary.TextChanged += new System.EventHandler(this.TextBoxReviewBoardSummaryTextChanged);
@@ -220,6 +223,42 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxSVN.TabIndex = 12;
             this.groupBoxSVN.TabStop = false;
             this.groupBoxSVN.Text = "SVN";
+            // 
+            // textBoxSVNBranch
+            // 
+            this.textBoxSVNBranch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxSVNBranch.Location = new System.Drawing.Point(486, 12);
+            this.textBoxSVNBranch.Name = "textBoxSVNBranch";
+            this.textBoxSVNBranch.ReadOnly = true;
+            this.textBoxSVNBranch.Size = new System.Drawing.Size(143, 20);
+            this.textBoxSVNBranch.TabIndex = 12;
+            // 
+            // labelBranch
+            // 
+            this.labelBranch.Location = new System.Drawing.Point(440, 16);
+            this.labelBranch.Name = "labelBranch";
+            this.labelBranch.Size = new System.Drawing.Size(44, 13);
+            this.labelBranch.TabIndex = 11;
+            this.labelBranch.Text = "branch";
+            // 
+            // textBoxSVNRepository
+            // 
+            this.textBoxSVNRepository.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxSVNRepository.Location = new System.Drawing.Point(289, 13);
+            this.textBoxSVNRepository.Name = "textBoxSVNRepository";
+            this.textBoxSVNRepository.ReadOnly = true;
+            this.textBoxSVNRepository.Size = new System.Drawing.Size(145, 20);
+            this.textBoxSVNRepository.TabIndex = 10;
+            // 
+            // labelOf
+            // 
+            this.labelOf.Location = new System.Drawing.Point(260, 16);
+            this.labelOf.Name = "labelOf";
+            this.labelOf.Size = new System.Drawing.Size(23, 13);
+            this.labelOf.TabIndex = 9;
+            this.labelOf.Text = "of";
             // 
             // textBoxCommitMessage
             // 
@@ -403,42 +442,6 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxBugSummary.Size = new System.Drawing.Size(497, 20);
             this.textBoxBugSummary.TabIndex = 0;
             // 
-            // labelOf
-            // 
-            this.labelOf.Location = new System.Drawing.Point(260, 16);
-            this.labelOf.Name = "labelOf";
-            this.labelOf.Size = new System.Drawing.Size(23, 13);
-            this.labelOf.TabIndex = 9;
-            this.labelOf.Text = "of";
-            // 
-            // textBoxSVNRepository
-            // 
-            this.textBoxSVNRepository.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSVNRepository.Location = new System.Drawing.Point(289, 13);
-            this.textBoxSVNRepository.Name = "textBoxSVNRepository";
-            this.textBoxSVNRepository.ReadOnly = true;
-            this.textBoxSVNRepository.Size = new System.Drawing.Size(145, 20);
-            this.textBoxSVNRepository.TabIndex = 10;
-            // 
-            // labelBranch
-            // 
-            this.labelBranch.Location = new System.Drawing.Point(440, 16);
-            this.labelBranch.Name = "labelBranch";
-            this.labelBranch.Size = new System.Drawing.Size(44, 13);
-            this.labelBranch.TabIndex = 11;
-            this.labelBranch.Text = "branch";
-            // 
-            // textBoxSVNBranch
-            // 
-            this.textBoxSVNBranch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSVNBranch.Location = new System.Drawing.Point(486, 12);
-            this.textBoxSVNBranch.Name = "textBoxSVNBranch";
-            this.textBoxSVNBranch.ReadOnly = true;
-            this.textBoxSVNBranch.Size = new System.Drawing.Size(143, 20);
-            this.textBoxSVNBranch.TabIndex = 12;
-            // 
             // GollumForm
             // 
             this.AcceptButton = this.buttonPostReview;
@@ -451,10 +454,12 @@ namespace Aidon.Tools.Gollum.GUI
             this.Controls.Add(this.groupBoxSVN);
             this.Controls.Add(this.groupBoxPostReview);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(650, 770);
             this.MinimumSize = new System.Drawing.Size(650, 567);
             this.Name = "GollumForm";
             this.Text = "Gollum";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GollumFormFormClosing);
             this.Shown += new System.EventHandler(this.GollumFormShown);
             this.groupBoxPostReview.ResumeLayout(false);
             this.groupBoxSVN.ResumeLayout(false);
