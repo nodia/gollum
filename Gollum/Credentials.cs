@@ -1,6 +1,4 @@
-﻿using System.Security;
-
-namespace Aidon.Tools.Gollum
+﻿namespace Aidon.Tools.Gollum
 {
     public class Credentials
     {

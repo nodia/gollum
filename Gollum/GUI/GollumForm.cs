@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +13,8 @@ namespace Aidon.Tools.Gollum.GUI
 {
     public partial class GollumForm : Form
     {
+        private const string ReviewBoardTicketUrl = "[ReviewBoardTicketUrl]";
+
         private bool _formShown;
         private bool _reviewBoardDone;
         private GollumEngine _engine;
@@ -34,22 +36,6 @@ namespace Aidon.Tools.Gollum.GUI
         }
 
         #region GollumEngine event handlers
-
-        private void EngineOnTicketDiscovered(string url)
-        {
-            if (InvokeRequired)
-            {
-                Invoke((MethodInvoker)(() => Clipboard.SetText(url)));
-            }
-            else
-            {
-                Clipboard.SetText(url);
-            }
-            if (_bug != null)
-            {
-                _bug.ReviewBoardTicketLink = url;
-            }
-        }
 
         private void EngineOnUpdateStatus(string message)
         {
@@ -73,7 +59,6 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 _engine = new GollumEngine(_subversionArguments, _projectSettings);
                 _engine.UpdateStatus += EngineOnUpdateStatus;
-                _engine.TicketDiscovered += EngineOnTicketDiscovered;
                 _engine.CredentialsCallback += EngineOnCredentialsCallback;
                 _formShown = true;
                 FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
@@ -140,7 +125,7 @@ namespace Aidon.Tools.Gollum.GUI
 
         private void TextBoxReviewBoardSummaryTextChanged(object sender, EventArgs e)
         {
-            var summary = textBoxReviewBoardSummary.Text.Replace("\r", " ").Replace("\n", " ");
+            var summary = textBoxReviewBoardSummary.Text.Replace("\r", String.Empty).Replace("\n", " ");
             if (String.IsNullOrWhiteSpace(summary) || String.IsNullOrWhiteSpace(textBoxReviewBoardDescription.Text))
             {
                 labelReviewBoardSummaryError.Visible = true;
@@ -190,12 +175,25 @@ namespace Aidon.Tools.Gollum.GUI
 
         #endregion
 
+        private void SetTicketUrlToClipboard(string url)
+        {
+            Clipboard.SetText(url);
+            if (_bug != null)
+            {
+                _bug.ReviewBoardTicketLink = url;
+            }
+        }
+
         private async Task<bool> PostToReviewBoard()
         {
             StartProgressBar();
-            bool success = await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text).ConfigureAwait(false);
-            _reviewBoardDone = success;
-            return success;
+            var response = await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text);
+            if (response != null)
+            {
+                SetTicketUrlToClipboard(response.ReviewUrl);
+                return true;
+            }
+            return false;
         }
 
         private void StartProgressBar()
@@ -210,11 +208,11 @@ namespace Aidon.Tools.Gollum.GUI
             progressBar.MarqueeAnimationSpeed = 0;
         }
 
-        private async Task<bool> PostToBugzillaAsync()
+        private async Task PostToBugzillaAsync()
         {
             if (_bug == null)
             {
-                return true;
+                return;
             }
 
             string token = _bug.UpdateToken;
@@ -222,7 +220,7 @@ namespace Aidon.Tools.Gollum.GUI
             string status = comboBoxBugStatus.GetItemText(comboBoxBugStatus.SelectedItem);
 
             var bugZillaComment = ConvertBugzillaComment(textBoxBugComment.Text);
-            return await _engine.PostToBugzillaAsync(textBoxBugNumber.Text,
+            await _engine.PostToBugzillaAsync(textBoxBugNumber.Text,
                                                      resolution,
                                                      status,
                                                      bugZillaComment,
@@ -231,7 +229,7 @@ namespace Aidon.Tools.Gollum.GUI
 
         private string ConvertBugzillaComment(string comment)
         {
-            return comment.Replace("[ReviewBoardTicketUrl]", _bug != null ? _bug.ReviewBoardTicketLink : "");
+            return comment.Replace(ReviewBoardTicketUrl, _bug != null ? _bug.ReviewBoardTicketLink : String.Empty);
         }
 
         private void UpdateStatus(string message, bool enabled = false)
@@ -263,7 +261,6 @@ namespace Aidon.Tools.Gollum.GUI
                 labelFrom.Visible = false;
                 labelTo.Visible = false;
                 textBoxRevisionTo.Visible = false;
-
                 textBoxRevisionFrom.Text = revisionTo.ToString(CultureInfo.InvariantCulture);
             }
             else
@@ -284,16 +281,20 @@ namespace Aidon.Tools.Gollum.GUI
 
         private void UpdateFixedBugsField(string commitMessage)
         {
-            string bugs = String.Empty;
+            var bugs = String.Empty;
             var result = _bugMatcher.Match(commitMessage);
             while (result.Success)
             {
-                bugs += result + " ";
+                bugs += result;
                 result = result.NextMatch();
+                if (result.Success)
+                {
+                    bugs += " ";
+                }
             }
             if (bugs != String.Empty && bugs != textBoxBugsFixed.Text)
             {
-                textBoxBugsFixed.Text = bugs.Trim();
+                textBoxBugsFixed.Text = bugs;
             }
         }
 
@@ -314,12 +315,10 @@ namespace Aidon.Tools.Gollum.GUI
                 comboBoxBugStatus.Text = _bug.Status;
                 comboBoxBugResolution.Text = _bug.Resolution;
 
-                textBoxBugComment.Text = "Fixed in " + _engine.ReviewBoardRepositoryName + " revision " +
-                                         _engine.CommitRevisionTo + " of " +
-                                         _engine.RepositoryBasePath + Environment.NewLine +
-                                         "[ReviewBoardTicketUrl]" + Environment.NewLine +
-                                         Environment.NewLine +
-                                         _engine.CommitMessage;
+                textBoxBugComment.Text = String.Format(@"Fixed in {0} revision {1} of {2}:{5}{3}{5}{5}{4}",
+                                                        _engine.ReviewBoardRepositoryName, _engine.CommitRevisionTo, 
+                                                        _engine.RepositoryBasePath, ReviewBoardTicketUrl, 
+                                                        _engine.CommitMessage, Environment.NewLine);
             }
             ToggleBugzillaVisibility(_bug != null);
             UpdateStatus("Post review", true);
@@ -332,12 +331,17 @@ namespace Aidon.Tools.Gollum.GUI
             try
             {
                 InitializeCancellation();
-                _bug = await GetBugInformationAsync(1500);
+                await Task.Delay(1500, _getBugCancellation.Token);
+                _bug = await GetBugInformationAsync();
             }
             catch (Exception ex)
             {
                 _bug = null;
-                if (ex is BugzillaException)
+                if (ex is BugzillaAuthenticationException)
+                {
+                    MessageBox.Show(this, "BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else if (ex is BugzillaException)
                 {
                     textBoxBugSummary.Text = ex.Message;
                 }
@@ -355,42 +359,76 @@ namespace Aidon.Tools.Gollum.GUI
 
         private void InitializeCancellation()
         {
-            try
+            if (_getBugCancellation != null)
             {
-                if (_getBugCancellation != null)
+                try
                 {
                     _getBugCancellation.Cancel();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Failed to cancel and cleanup existing cancellation token: {0}", ex.Message);
+                }
+                finally
+                {
                     _getBugCancellation.Dispose();
                 }
             }
-            catch (Exception)
-            {
-            }
-
             _getBugCancellation = new CancellationTokenSource();
         }
 
-        private async Task<BugzillaBug> GetBugInformationAsync(int delay)
+        private async Task<BugzillaBug> GetBugInformationAsync()
         {
             var cancel = _getBugCancellation;
-            // Delays the user input without blocking the GUI thread
-            await Task.Delay(delay, cancel.Token);
+            
+            if (textBoxBugsFixed.Text.Length <= 0)
+            {
+                return null;
+            }
+
             cancel.Token.ThrowIfCancellationRequested();
 
-            if (textBoxBugsFixed.Text.Length > 0)
+            ToggleBugzillaVisibility(false);
+            StartProgressBar();
+
+            Exception lastException = null;
+
+            var numbers = textBoxBugsFixed.Text.Split(new [] { " ", "," }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var bugNumber in numbers)
             {
-                var numbers = textBoxBugsFixed.Text.Split(new [] { " ", "," }, StringSplitOptions.RemoveEmptyEntries);
+                cancel.Token.ThrowIfCancellationRequested();
+
                 uint test;
-                if (numbers.Length != 0 && UInt32.TryParse(numbers.First().Trim(), out test))
+                var nextBug = bugNumber.Trim();
+                if (numbers.Length == 0 || !UInt32.TryParse(nextBug, out test))
                 {
-                    ToggleBugzillaVisibility(false);
-                    UpdateStatus("Loading bug information...");
-                    StartProgressBar();
-                    textBoxBugNumber.Text = numbers.First();
-                    cancel.CancelAfter(TimeSpan.FromSeconds(60));
-                    return await _engine.GetBugInformationAsync(textBoxBugNumber.Text, cancel.Token).ConfigureAwait(false);
+                    continue;
+                }
+
+                UpdateStatus(String.Format("Loading information about bug #{0}...", nextBug));
+                cancel.CancelAfter(TimeSpan.FromSeconds(60));
+                
+                try
+                {
+                    var bug = await _engine.GetBugInformationAsync(nextBug, cancel.Token);
+                    if (bug != null)
+                    {
+                        textBoxBugNumber.Text = nextBug;
+                        return bug;
+                    }
+                }
+                catch (BugzillaException ex)
+                {
+                    Debug.WriteLine(ex);
+                    lastException = ex;
                 }
             }
+
+            if (lastException != null)
+            {
+                throw lastException;
+            }
+
             return null;
         }
 
@@ -417,14 +455,22 @@ namespace Aidon.Tools.Gollum.GUI
                     buttonCancel.Enabled = false;
                     buttonPostReview.Enabled = false;
                     success = await PostToReviewBoard();
+                    _reviewBoardDone = success;
+                    UpdateStatus(success ? "Review ticket created..." : "Failed to create review ticket!");
+                    await Task.Delay(1000);
                 }
 
-                if (success && _engine.BugzillaEnabled && _bug != null)
+                if (_reviewBoardDone && _engine.BugzillaEnabled && _bug != null)
                 {
-                    success = await PostToBugzillaAsync();
+                    await PostToBugzillaAsync();
                 }
-
                 return success;
+            }
+            catch (BugzillaAuthenticationException)
+            {
+                success = false;
+                MessageBox.Show("BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -444,14 +490,7 @@ namespace Aidon.Tools.Gollum.GUI
                     }
                     buttonCancel.Enabled = true;
                     buttonPostReview.Enabled = true;
-                    if (_reviewBoardDone)
-                    {
-                        UpdateStatus("Update bug", true);
-                    }
-                    else
-                    {
-                        UpdateStatus("Post review", true);
-                    }
+                    UpdateStatus(_reviewBoardDone ? "Update bug" : "Post review", true);
                 }
             }
         }

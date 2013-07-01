@@ -25,12 +25,6 @@ namespace Aidon.Tools.Gollum
     /// <param name="message">The message.</param>
     public delegate void Update(string message);
 
-    /// <summary>
-    /// Delegate for sending the review board ticket url back to the user interface as soon as it is discovered.
-    /// </summary>
-    /// <param name="url">The URL.</param>
-    public delegate void ReviewBoardTicketUrlDiscovered(string url);
-
     public class GollumEngine
     {
         private readonly SubversionArguments _subversionArguments;
@@ -41,7 +35,6 @@ namespace Aidon.Tools.Gollum
         private readonly IBugzillaHandler _bugzillaClient;
 
         public event Update UpdateStatus;
-        public event ReviewBoardTicketUrlDiscovered TicketDiscovered;
         public event CredentialCallback CredentialsCallback;
 
         public GollumEngine(SubversionArguments subversionArguments, ProjectSettings projectSettings)
@@ -63,8 +56,6 @@ namespace Aidon.Tools.Gollum
 
             _reviewBoardHandler = new ReviewBoardRestClient(reviewBoardUrl);
             //_reviewBoardHandler = new DummyReviewBoardHandler();
-
-            _reviewBoardHandler.ReviewIdDiscovered += ReviewBoardHandlerOnReviewIdDiscovered;
 
             if (!String.IsNullOrEmpty(bugzillaUrl))
             {
@@ -130,7 +121,7 @@ namespace Aidon.Tools.Gollum
         /// <returns>
         /// True if posting to review board succeeds; otherwise, false.
         /// </returns>
-        public async Task<bool> PostToReviewBoardAsync(string summary, string description, string bugs)
+        public async Task<ReviewBoardResponse> PostToReviewBoardAsync(string summary, string description, string bugs)
         {
             try
             {
@@ -153,7 +144,7 @@ namespace Aidon.Tools.Gollum
                 };
 
                 var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
-                return response != null;
+                return response;
             }
             catch (ReviewBoardAuthenticationException)
             {
@@ -165,7 +156,7 @@ namespace Aidon.Tools.Gollum
             }
             catch (Exception)
             {
-                return false;
+                return null;
             }
         }
 
@@ -178,7 +169,7 @@ namespace Aidon.Tools.Gollum
         /// <param name="comment">The comment.</param>
         /// <param name="updateToken">The update token.</param>
         /// <returns></returns>
-        public async Task<bool> PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
+        public async Task PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
         {
             UpdateStatus("Updating Bugzilla...");
             var arguments = new BugzillaArguments
@@ -190,7 +181,7 @@ namespace Aidon.Tools.Gollum
                 Status = status
             };
 
-            return await _bugzillaClient.PostToBugzillaAsync(arguments).ConfigureAwait(false);
+            await _bugzillaClient.PostToBugzillaAsync(arguments).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -243,16 +234,6 @@ namespace Aidon.Tools.Gollum
             }
             result.Append(relativePath);
             return result.ToString();
-        }
-
-        private void ReviewBoardHandlerOnReviewIdDiscovered(object sender, ReviewIdDiscoveredEventArgs reviewIdDiscoveredEventArgs)
-        {
-            PostUpdate("Review ticket created. Uploading diff...");
-
-            if (TicketDiscovered != null)
-            {
-                TicketDiscovered(reviewIdDiscoveredEventArgs.ReviewBoardTicketLink);
-            }
         }
     }
 }

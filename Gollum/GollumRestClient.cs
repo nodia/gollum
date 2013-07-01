@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
@@ -24,12 +25,12 @@ namespace Aidon.Tools.Gollum
         /// <summary>
         /// The REST client.
         /// </summary>
-        public RestClient Client;
+        protected readonly RestClient Client;
 
         /// <summary>
         /// Used to determine if we need to get the cookie or if we already have it saved.
         /// </summary>
-        public bool HasCookie { get; private set; }
+        private bool HasCookie { get; set; }
 
         private readonly string _directory;
 
@@ -48,7 +49,7 @@ namespace Aidon.Tools.Gollum
         /// Checks if a valid cookies already exist on this machine and sets them to the client cookie container. 
         /// </summary>
         /// <returns>True if a cookie or cookies exist and are not expired.</returns>
-        public bool ReadCookies()
+        protected bool ReadCookies()
         {
             var cookies = ReadCookiesFromFile();
             if (cookies != null && cookies.Count > 0)
@@ -72,7 +73,7 @@ namespace Aidon.Tools.Gollum
         /// Reads the isolated storage file to see if there is a cookie with the given name saved in it.
         /// </summary>
         /// <returns> Cookie, null if not found. </returns>
-        public CookieCollection ReadCookiesFromFile()
+        private CookieCollection ReadCookiesFromFile()
         {
             try
             {
@@ -103,7 +104,7 @@ namespace Aidon.Tools.Gollum
         /// <summary>
         /// Clears the cookie files from the specified directory.
         /// </summary>
-        public void ClearCookieFile()
+        protected void ClearCookieFile()
         {
             try
             {
@@ -119,8 +120,9 @@ namespace Aidon.Tools.Gollum
                     isolatedStorageFile.DeleteDirectory(_directory);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex);
             }
         }
 
@@ -128,7 +130,7 @@ namespace Aidon.Tools.Gollum
         /// Gets the cookie from the reponse, sets it to the cookie container and saves it to storage file.
         /// </summary>
         /// <param name="response">The response.</param>
-        public void ProcessResponseCookies(IRestResponse response)
+        protected void ProcessResponseCookies(IRestResponse response)
         {
             if (HasCookie || response == null)
             {
@@ -169,7 +171,7 @@ namespace Aidon.Tools.Gollum
         /// </summary>
         /// <param name="cookies">Cookies to save</param>
         /// <returns>True if succesful, false otherwise</returns>
-        public bool SaveCookiesToFile(CookieCollection cookies)
+        private void SaveCookiesToFile(CookieCollection cookies)
         {
             try
             {
@@ -191,11 +193,10 @@ namespace Aidon.Tools.Gollum
                         }
                     }
                 }
-                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                Debug.WriteLine(ex);
             }
         }
 
@@ -218,7 +219,7 @@ namespace Aidon.Tools.Gollum
         /// <exception cref="ObjectDisposedException">
         /// Thrown if <paramref name="token"/> is being disposed of.
         /// </exception>
-        protected virtual Task<IRestResponse> ExecuteAsync(IRestRequest request, CancellationToken token)
+        protected Task<IRestResponse> ExecuteAsync(IRestRequest request, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
             var taskCompletionSource = new TaskCompletionSource<IRestResponse>();

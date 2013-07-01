@@ -6,8 +6,8 @@ namespace Aidon.Tools.Gollum.Bugzilla
 {
     public class XmlRequest
     {
-        public string Method { get; set; }
-        public List<XmlParameter> Parameters { get; set; }
+        public string Method { private get; set; }
+        public List<XmlParameter> Parameters { get; private set; }
 
         public XmlRequest()
         {

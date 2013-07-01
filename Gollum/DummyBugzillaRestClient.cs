@@ -6,10 +6,9 @@ namespace Aidon.Tools.Gollum
 {
     public class DummyBugzillaRestClient : IBugzillaHandler
     {
-        public async Task<bool> PostToBugzillaAsync(BugzillaArguments arguments)
+        public async Task PostToBugzillaAsync(BugzillaArguments arguments)
         {
             await Task.Delay(3000).ConfigureAwait(false);
-            return true;
         }
 
         public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationToken token)

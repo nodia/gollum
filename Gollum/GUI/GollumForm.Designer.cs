@@ -34,7 +34,6 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelRevision = new System.Windows.Forms.Label();
             this.labelReviewBoardDescription = new System.Windows.Forms.Label();
             this.textBoxReviewBoardDescription = new System.Windows.Forms.TextBox();
-            this.buttonPostReview = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.labelReviewBoardSummaryError = new System.Windows.Forms.Label();
             this.textBoxReviewBoardSummary = new System.Windows.Forms.TextBox();
@@ -44,6 +43,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelCommitMessage = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.groupBoxPostReview = new System.Windows.Forms.GroupBox();
+            this.buttonPostReview = new System.Windows.Forms.Button();
             this.groupBoxSVN = new System.Windows.Forms.GroupBox();
             this.textBoxSVNBranch = new System.Windows.Forms.TextBox();
             this.labelBranch = new System.Windows.Forms.Label();
@@ -100,20 +100,11 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxReviewBoardDescription.TabIndex = 2;
             this.textBoxReviewBoardDescription.TextChanged += new System.EventHandler(this.TextBoxReviewBoardDescriptionTextChanged);
             // 
-            // buttonPostReview
-            // 
-            this.buttonPostReview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonPostReview.Location = new System.Drawing.Point(3, 16);
-            this.buttonPostReview.Name = "buttonPostReview";
-            this.buttonPostReview.Size = new System.Drawing.Size(306, 42);
-            this.buttonPostReview.TabIndex = 7;
-            this.buttonPostReview.Text = "Post review";
-            this.buttonPostReview.Click += new System.EventHandler(this.ButtonPostReviewClick);
-            // 
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Dock = System.Windows.Forms.DockStyle.Right;
+            this.buttonCancel.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonCancel.Location = new System.Drawing.Point(309, 16);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(322, 42);
@@ -158,7 +149,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelBugsFixed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelBugsFixed.Location = new System.Drawing.Point(12, 292);
             this.labelBugsFixed.Name = "labelBugsFixed";
-            this.labelBugsFixed.Size = new System.Drawing.Size(68, 13);
+            this.labelBugsFixed.Size = new System.Drawing.Size(68, 20);
             this.labelBugsFixed.TabIndex = 3;
             this.labelBugsFixed.Text = "Bugs fixed";
             // 
@@ -166,7 +157,7 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.labelReviewBoardSummary.Location = new System.Drawing.Point(12, 21);
             this.labelReviewBoardSummary.Name = "labelReviewBoardSummary";
-            this.labelReviewBoardSummary.Size = new System.Drawing.Size(126, 13);
+            this.labelReviewBoardSummary.Size = new System.Drawing.Size(126, 20);
             this.labelReviewBoardSummary.TabIndex = 2;
             this.labelReviewBoardSummary.Text = "Review Board summary";
             // 
@@ -174,7 +165,7 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.labelCommitMessage.Location = new System.Drawing.Point(12, 42);
             this.labelCommitMessage.Name = "labelCommitMessage";
-            this.labelCommitMessage.Size = new System.Drawing.Size(107, 13);
+            this.labelCommitMessage.Size = new System.Drawing.Size(107, 19);
             this.labelCommitMessage.TabIndex = 2;
             this.labelCommitMessage.Text = "Commit message";
             // 
@@ -193,13 +184,25 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxPostReview.Controls.Add(this.buttonCancel);
             this.groupBoxPostReview.Controls.Add(this.progressBar);
             this.groupBoxPostReview.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBoxPostReview.Location = new System.Drawing.Point(0, 648);
+            this.groupBoxPostReview.Location = new System.Drawing.Point(0, 639);
             this.groupBoxPostReview.MinimumSize = new System.Drawing.Size(634, 84);
             this.groupBoxPostReview.Name = "groupBoxPostReview";
             this.groupBoxPostReview.Size = new System.Drawing.Size(634, 84);
             this.groupBoxPostReview.TabIndex = 11;
             this.groupBoxPostReview.TabStop = false;
             this.groupBoxPostReview.Text = "Post review?";
+            // 
+            // buttonPostReview
+            // 
+            this.buttonPostReview.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonPostReview.Dock = System.Windows.Forms.DockStyle.Right;
+            this.buttonPostReview.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonPostReview.Location = new System.Drawing.Point(3, 16);
+            this.buttonPostReview.Name = "buttonPostReview";
+            this.buttonPostReview.Size = new System.Drawing.Size(306, 42);
+            this.buttonPostReview.TabIndex = 11;
+            this.buttonPostReview.Text = "Post review";
+            this.buttonPostReview.Click += new System.EventHandler(this.ButtonPostReviewClick);
             // 
             // groupBoxSVN
             // 
@@ -341,7 +344,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxBugzilla.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxBugzilla.Location = new System.Drawing.Point(0, 435);
             this.groupBoxBugzilla.Name = "groupBoxBugzilla";
-            this.groupBoxBugzilla.Size = new System.Drawing.Size(634, 213);
+            this.groupBoxBugzilla.Size = new System.Drawing.Size(634, 204);
             this.groupBoxBugzilla.TabIndex = 10;
             this.groupBoxBugzilla.TabStop = false;
             this.groupBoxBugzilla.Text = "Bugzilla";
@@ -358,7 +361,7 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.labelBug.Location = new System.Drawing.Point(12, 27);
             this.labelBug.Name = "labelBug";
-            this.labelBug.Size = new System.Drawing.Size(28, 13);
+            this.labelBug.Size = new System.Drawing.Size(28, 19);
             this.labelBug.TabIndex = 7;
             this.labelBug.Text = "Bug";
             // 
@@ -369,7 +372,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxBugNumber.Location = new System.Drawing.Point(41, 24);
             this.textBoxBugNumber.Name = "textBoxBugNumber";
             this.textBoxBugNumber.ReadOnly = true;
-            this.textBoxBugNumber.Size = new System.Drawing.Size(78, 20);
+            this.textBoxBugNumber.Size = new System.Drawing.Size(79, 20);
             this.textBoxBugNumber.TabIndex = 6;
             // 
             // comboBoxBugResolution
@@ -377,13 +380,14 @@ namespace Aidon.Tools.Gollum.GUI
             this.comboBoxBugResolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxBugResolution.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxBugResolution.Enabled = false;
+            this.comboBoxBugResolution.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.comboBoxBugResolution.Items.AddRange(new object[] {
             "FIXED",
             "INVALID",
             "WONTFIX",
             "DUPLICATE",
             "WORKSFORME"});
-            this.comboBoxBugResolution.Location = new System.Drawing.Point(384, 186);
+            this.comboBoxBugResolution.Location = new System.Drawing.Point(384, 177);
             this.comboBoxBugResolution.Name = "comboBoxBugResolution";
             this.comboBoxBugResolution.Size = new System.Drawing.Size(245, 21);
             this.comboBoxBugResolution.TabIndex = 5;
@@ -392,13 +396,14 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.comboBoxBugStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxBugStatus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxBugStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.comboBoxBugStatus.Items.AddRange(new object[] {
             "UNCONFIRMED",
             "CONFIRMED",
             "IN_PROGRESS",
             "RESOLVED",
             "VERIFIED"});
-            this.comboBoxBugStatus.Location = new System.Drawing.Point(132, 186);
+            this.comboBoxBugStatus.Location = new System.Drawing.Point(132, 177);
             this.comboBoxBugStatus.Name = "comboBoxBugStatus";
             this.comboBoxBugStatus.Size = new System.Drawing.Size(246, 21);
             this.comboBoxBugStatus.TabIndex = 4;
@@ -407,17 +412,17 @@ namespace Aidon.Tools.Gollum.GUI
             // labelBugStatus
             // 
             this.labelBugStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelBugStatus.Location = new System.Drawing.Point(12, 189);
+            this.labelBugStatus.Location = new System.Drawing.Point(12, 180);
             this.labelBugStatus.Name = "labelBugStatus";
-            this.labelBugStatus.Size = new System.Drawing.Size(107, 13);
+            this.labelBugStatus.Size = new System.Drawing.Size(107, 16);
             this.labelBugStatus.TabIndex = 3;
             this.labelBugStatus.Text = "Bug status";
             // 
             // labelBugComment
             // 
-            this.labelBugComment.Location = new System.Drawing.Point(12, 49);
+            this.labelBugComment.Location = new System.Drawing.Point(12, 46);
             this.labelBugComment.Name = "labelBugComment";
-            this.labelBugComment.Size = new System.Drawing.Size(112, 13);
+            this.labelBugComment.Size = new System.Drawing.Size(112, 16);
             this.labelBugComment.TabIndex = 2;
             this.labelBugComment.Text = "Bugzilla comment";
             // 
@@ -429,7 +434,8 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxBugComment.Location = new System.Drawing.Point(12, 65);
             this.textBoxBugComment.Multiline = true;
             this.textBoxBugComment.Name = "textBoxBugComment";
-            this.textBoxBugComment.Size = new System.Drawing.Size(617, 118);
+            this.textBoxBugComment.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxBugComment.Size = new System.Drawing.Size(617, 109);
             this.textBoxBugComment.TabIndex = 2;
             // 
             // textBoxBugSummary
@@ -444,19 +450,18 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             // GollumForm
             // 
-            this.AcceptButton = this.buttonPostReview;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(634, 732);
+            this.ClientSize = new System.Drawing.Size(634, 723);
             this.Controls.Add(this.groupBoxBugzilla);
             this.Controls.Add(this.groupBoxReviewBoard);
             this.Controls.Add(this.groupBoxSVN);
             this.Controls.Add(this.groupBoxPostReview);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(650, 770);
-            this.MinimumSize = new System.Drawing.Size(650, 567);
+            this.MaximumSize = new System.Drawing.Size(650, 768);
+            this.MinimumSize = new System.Drawing.Size(650, 565);
             this.Name = "GollumForm";
             this.Text = "Gollum";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GollumFormFormClosing);
@@ -475,7 +480,6 @@ namespace Aidon.Tools.Gollum.GUI
         #endregion
 
         private TextBox textBoxReviewBoardDescription;
-        private Button buttonPostReview;
         private Button buttonCancel;
         private Label labelCommitMessage;
         private ProgressBar progressBar;
@@ -508,5 +512,6 @@ namespace Aidon.Tools.Gollum.GUI
         private Label labelOf;
         private TextBox textBoxSVNBranch;
         private Label labelBranch;
+        private Button buttonPostReview;
     }
 }

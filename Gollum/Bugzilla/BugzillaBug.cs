@@ -4,10 +4,10 @@ namespace Aidon.Tools.Gollum.Bugzilla
 {
     public class BugzillaBug
     {
-        public string Resolution { get; set; }
-        public string Status { get; set; }
-        public string UpdateToken { get; set; }
-        public string Summary { get; set; }
+        public string Resolution { get; private set; }
+        public string Status { get; private set; }
+        public string UpdateToken { get; private set; }
+        public string Summary { get; private set; }
         public string ReviewBoardTicketLink { get; set; }
 
         public BugzillaBug(string xml)

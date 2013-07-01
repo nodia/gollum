@@ -10,8 +10,8 @@ namespace Aidon.Tools.Gollum.GUI
     {
         private readonly ToolTip _projectToolTip;
 
-        public ProjectSettings ProjectSettings { get; set; }
-        public SubversionArguments SubversionArguments { get; set; }
+        public ProjectSettings ProjectSettings { get; private set; }
+        public SubversionArguments SubversionArguments { get; private set; }
 
         public ProjectSettingsWindow()
         {

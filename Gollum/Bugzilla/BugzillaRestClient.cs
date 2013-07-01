@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -13,13 +14,9 @@ namespace Aidon.Tools.Gollum.Bugzilla
         {
         }
 
-        public async Task<bool> PostToBugzillaAsync(BugzillaArguments arguments)
+        public async Task PostToBugzillaAsync(BugzillaArguments arguments)
         {
-            bool loginSuccess = await Login(arguments).ConfigureAwait(false);
-            if (!loginSuccess)
-            {
-                return false;
-            }
+            await Login(arguments).ConfigureAwait(false);
 
             var updateStatus = new XmlRequest
             {
@@ -57,22 +54,21 @@ namespace Aidon.Tools.Gollum.Bugzilla
                 var commentResponse = await ExecuteAsync(commentRequest, tokenSource.Token).ConfigureAwait(false);
                 CheckResponse(commentResponse);
             }
-            return true;
         }
 
-        private async Task<bool> Login(BugzillaArguments arguments)
+        private async Task Login(BugzillaArguments arguments)
         {
             if (ReadCookies())
             {
-                return true;
+                return;
             }
 
             if (arguments.CredentialCallback == null)
             {
-                return false;
+                throw new BugzillaAuthenticationException();
             }
             var credentials = arguments.CredentialCallback("Bugzilla login");
-            return await SendLoginRequestAsync(credentials.Username, credentials.Password).ConfigureAwait(false);
+            await SendLoginRequestAsync(credentials.Username, credentials.Password).ConfigureAwait(false);
         }
 
         private void CheckResponse(IRestResponse response)
@@ -138,7 +134,7 @@ namespace Aidon.Tools.Gollum.Bugzilla
             ProcessResponseCookies(response);
         }
 
-        private async Task<bool> SendLoginRequestAsync(string username, string password)
+        private async Task SendLoginRequestAsync(string username, string password)
         {
             var xml = new XmlRequest
             {
@@ -153,19 +149,11 @@ namespace Aidon.Tools.Gollum.Bugzilla
             var request = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
             request.AddParameter("text/xml", xml.ToString(), ParameterType.RequestBody);
 
-            try
+            using (var tokenSource = new CancellationTokenSource())
             {
-                using (var tokenSource = new CancellationTokenSource())
-                {
-                    tokenSource.CancelAfter(DefaultTimeout);
-                    var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
-                    CheckResponse(response);
-                }
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
+                tokenSource.CancelAfter(DefaultTimeout);
+                var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(response);
             }
         }
 
@@ -173,11 +161,7 @@ namespace Aidon.Tools.Gollum.Bugzilla
         {
             token.ThrowIfCancellationRequested();
 
-            bool loginSuccess = await Login(arguments).ConfigureAwait(false);
-            if (!loginSuccess)
-            {
-                return null;
-            }
+            await Login(arguments).ConfigureAwait(false);
 
             token.ThrowIfCancellationRequested();
 

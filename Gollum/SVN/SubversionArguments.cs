@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Aidon.Tools.Gollum.SVN
+﻿namespace Aidon.Tools.Gollum.SVN
 {
     public enum SvnDepth
     {

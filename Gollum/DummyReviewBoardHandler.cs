@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Aidon.Tools.Gollum.ReviewBoard;
 
 namespace Aidon.Tools.Gollum
@@ -14,7 +12,5 @@ namespace Aidon.Tools.Gollum
             await Task.Delay(2000).ConfigureAwait(false);
             return new ReviewBoardResponse();
         }
-
-        public event EventHandler<ReviewIdDiscoveredEventArgs> ReviewIdDiscovered;
     }
 }

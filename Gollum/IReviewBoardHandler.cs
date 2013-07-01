@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Aidon.Tools.Gollum.ReviewBoard;
 
 namespace Aidon.Tools.Gollum
@@ -19,10 +17,5 @@ namespace Aidon.Tools.Gollum
         /// </returns>
         /// <exception cref="ReviewBoardException">Thrown if the review cannot be posted.</exception>
         Task<ReviewBoardResponse> PostToReviewBoardAsync(ReviewBoardArguments arguments);
-
-        /// <summary>
-        /// Occurs when the review has been id discovered.
-        /// </summary>
-        event EventHandler<ReviewIdDiscoveredEventArgs> ReviewIdDiscovered;
     }
 }

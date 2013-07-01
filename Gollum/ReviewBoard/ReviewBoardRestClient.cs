@@ -13,8 +13,6 @@ namespace Aidon.Tools.Gollum.ReviewBoard
     /// </summary>
     public class ReviewBoardRestClient : GollumRestClient, IReviewBoardHandler
     {
-        public event EventHandler<ReviewIdDiscoveredEventArgs> ReviewIdDiscovered;
-
         private readonly string _clientUrl;
 
         public ReviewBoardRestClient(string clientUrl) : base("GollumReviewBoard", clientUrl.TrimEnd('/') + "/api/")
@@ -43,8 +41,6 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 throw new ReviewBoardException("Unable to post review!");
             }
 
-            OnReviewIdDiscovered(_clientUrl + @"r/" + reviewRequest.Id);
-
             await AddReviewDiffAsync(reviewRequest.Id, arguments.BaseDirectory, arguments.DiffFile).ConfigureAwait(false);
 
             reviewRequest.Summary = arguments.Summary;
@@ -58,7 +54,7 @@ namespace Aidon.Tools.Gollum.ReviewBoard
             return new ReviewBoardResponse
             {
                 ReviewTicketId = reviewRequest.Id.ToString(CultureInfo.InvariantCulture),
-                ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id
+                ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id,
             };
         }
 
@@ -90,7 +86,7 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 throw new ReviewBoardException("Null response from review board.");
             }
 
-            if (response.Content.IndexOf("\"err\":", StringComparison.Ordinal) > 0)
+            if (response.Content.IndexOf("\"err\":", StringComparison.Ordinal) >= 0)
             {
                 ReviewBoardErrorResponse error;
                 try
@@ -213,7 +209,7 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 {
                     using (var binaryReader = new BinaryReader(fileStream))
                     {
-                        int totalBytes = (int)new FileInfo(filename).Length;
+                        var totalBytes = (int)new FileInfo(filename).Length;
                         return binaryReader.ReadBytes(totalBytes);
                     }
                 }
@@ -221,15 +217,6 @@ namespace Aidon.Tools.Gollum.ReviewBoard
             catch (Exception e)
             {
                 throw new ReviewBoardException("Unable to read svn diff file!", e);
-            }
-        }
-
-        protected virtual void OnReviewIdDiscovered(string url)
-        {
-            EventHandler<ReviewIdDiscoveredEventArgs> handler = ReviewIdDiscovered;
-            if (handler != null)
-            {
-                handler(this, new ReviewIdDiscoveredEventArgs { ReviewBoardTicketLink = url });
             }
         }
     }
