@@ -13,6 +13,10 @@ namespace Aidon.Tools.Gollum.GUI
 {
     public partial class GollumForm : Form
     {
+        private const int ClientHeightWithoutBugzilla = 545;
+
+        private const int ClientHeightWithBugzilla = 770;
+
         private const string ReviewBoardTicketUrl = "[ReviewBoardTicketUrl]";
 
         private bool _formShown;
@@ -30,9 +34,7 @@ namespace Aidon.Tools.Gollum.GUI
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
             _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            Height = 567;
-            groupBoxBugzilla.Visible = false;
-            groupBoxBugzilla.Enabled = false;
+            ToggleBugzillaVisibility(false);
         }
 
         #region GollumEngine event handlers
@@ -61,6 +63,7 @@ namespace Aidon.Tools.Gollum.GUI
                 _engine.UpdateStatus += EngineOnUpdateStatus;
                 _engine.CredentialsCallback += EngineOnCredentialsCallback;
                 _formShown = true;
+                checkBoxUpdateOnlyBugzilla.Visible = _engine.BugzillaEnabled;
                 FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
                 textBoxReviewBoardSummary.Focus();
                 BringToFront();
@@ -171,6 +174,11 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 _getBugCancellation.Dispose();
             }
+        }
+
+        private void CheckBoxUpdateOnlyBugzillaCheckedChanged(object sender, EventArgs e)
+        {
+            UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone  ? "Update bug" : "Post review", true);
         }
 
         #endregion
@@ -383,6 +391,7 @@ namespace Aidon.Tools.Gollum.GUI
             
             if (textBoxBugsFixed.Text.Length <= 0)
             {
+                EnableUpdateOnlyBugzilla(false);
                 return null;
             }
 
@@ -413,6 +422,7 @@ namespace Aidon.Tools.Gollum.GUI
                     var bug = await _engine.GetBugInformationAsync(nextBug, cancel.Token);
                     if (bug != null)
                     {
+                        EnableUpdateOnlyBugzilla(true);
                         textBoxBugNumber.Text = nextBug;
                         return bug;
                     }
@@ -423,6 +433,8 @@ namespace Aidon.Tools.Gollum.GUI
                     lastException = ex;
                 }
             }
+
+            EnableUpdateOnlyBugzilla(false);
 
             if (lastException != null)
             {
@@ -436,19 +448,30 @@ namespace Aidon.Tools.Gollum.GUI
         {
             groupBoxBugzilla.Visible = visible;
             groupBoxBugzilla.Enabled = visible;
-            var size = visible ? new Size(Width, 780) : new Size(Width, 567);
+            var size = visible ? new Size(Width, ClientHeightWithBugzilla) : new Size(Width, ClientHeightWithoutBugzilla);
             MaximumSize = size;
             MinimumSize = size;
+            ClientSize = size;
+        }
+
+        private void EnableUpdateOnlyBugzilla(bool update)
+        {
+            checkBoxUpdateOnlyBugzilla.Enabled = update;
+            if (!update)
+            {
+                checkBoxUpdateOnlyBugzilla.Checked = false;
+            }
         }
 
         private async Task<bool> PostReviewAsync()
         {
             bool success = true;
+            bool updateOnlyBugzilla = checkBoxUpdateOnlyBugzilla.Checked;
             try
             {
                 StartProgressBar();
 
-                if (!_reviewBoardDone)
+                if (!_reviewBoardDone && !updateOnlyBugzilla)
                 {
                     groupBoxReviewBoard.Enabled = false;
                     groupBoxBugzilla.Enabled = false;
@@ -460,7 +483,7 @@ namespace Aidon.Tools.Gollum.GUI
                     await Task.Delay(1000);
                 }
 
-                if (_reviewBoardDone && _engine.BugzillaEnabled && _bug != null)
+                if ((_reviewBoardDone || updateOnlyBugzilla) && _engine.BugzillaEnabled && _bug != null)
                 {
                     await PostToBugzillaAsync();
                 }
@@ -469,7 +492,8 @@ namespace Aidon.Tools.Gollum.GUI
             catch (BugzillaAuthenticationException)
             {
                 success = false;
-                MessageBox.Show("BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
                 return false;
             }
             catch (Exception ex)

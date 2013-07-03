@@ -148,6 +148,8 @@ namespace Aidon.Tools.Gollum.GUI
             try
             {
                 subversionArguments.Message = await SvnPatchCreator.GetMessageForRevision(subversionArguments);
+                ProjectSettings = ProjectSettings.Load(Path.Combine(subversionArguments.LocalProjectRootDirectory, ProjectSettings.DefaultFileName));
+                SubversionArguments = subversionArguments;
             }
             catch (Exception ex)
             {
@@ -155,9 +157,6 @@ namespace Aidon.Tools.Gollum.GUI
                 buttonGo.Enabled = true;
                 return;
             }
-
-            ProjectSettings = ProjectSettings.Load(Path.Combine(subversionArguments.LocalProjectRootDirectory, ProjectSettings.DefaultFileName));
-            SubversionArguments = subversionArguments;
 
             DialogResult = DialogResult.OK;
             Close();

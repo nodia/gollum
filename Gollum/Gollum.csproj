@@ -135,6 +135,9 @@
       <Link>license.txt</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="gollum.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="gollum256alpha.ico" />
   </ItemGroup>
   <ItemGroup />
