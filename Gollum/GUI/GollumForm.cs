@@ -145,7 +145,7 @@ namespace Aidon.Tools.Gollum.GUI
                 }
                 UpdateFixedBugsField(summary);
                 labelReviewBoardSummaryError.Visible = false;
-                UpdateStatus("Post review", true);
+                UpdateStatus(GetReviewButtonText(), true);
             }
         }
 
@@ -159,7 +159,7 @@ namespace Aidon.Tools.Gollum.GUI
             else
             {
                 labelReviewBoardSummaryError.Visible = false;
-                UpdateStatus("Post review", true);
+                UpdateStatus(GetReviewButtonText(), true);
             }
         }
 
@@ -178,7 +178,10 @@ namespace Aidon.Tools.Gollum.GUI
 
         private void CheckBoxUpdateOnlyBugzillaCheckedChanged(object sender, EventArgs e)
         {
-            UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone  ? "Update bug" : "Post review", true);
+            if (buttonPostReview.Enabled)
+            {
+                UpdateStatus(GetReviewButtonText(), true);
+            }
         }
 
         #endregion
@@ -329,7 +332,7 @@ namespace Aidon.Tools.Gollum.GUI
                                                         _engine.CommitMessage, Environment.NewLine);
             }
             ToggleBugzillaVisibility(_bug != null);
-            UpdateStatus("Post review", true);
+            UpdateStatus(GetReviewButtonText(), true);
         }
 
         private async Task SetBugDisplay()
@@ -514,9 +517,16 @@ namespace Aidon.Tools.Gollum.GUI
                     }
                     buttonCancel.Enabled = true;
                     buttonPostReview.Enabled = true;
-                    UpdateStatus(_reviewBoardDone ? "Update bug" : "Post review", true);
+                    UpdateStatus(GetReviewButtonText(), true);
                 }
             }
+        }
+
+        private string GetReviewButtonText()
+        {
+            return _engine.BugzillaEnabled && (_reviewBoardDone || checkBoxUpdateOnlyBugzilla.Checked)
+                        ? "Update bug"
+                        : "Post review";
         }
     }
 }
