@@ -88,8 +88,8 @@ so that the credentials do not need to be entered every time.
 The first part of the window contains the SVN commit information which was received from TortoiseSVN. This information is not editable. 
 
 The next part contains the summary, description and bugs fixed of the Review Board ticket. These are automatically filled with the commit message. Review Board summary will 
-not allow line breaks and if one is entered Gollum will show a warning and prevent sending the ticket. The bugs fixed field will check the commit message and try to detect
-if it contains bug fixes. Multiple bugs can be entered using comma as a separator. 
+not allow line breaks and if one is entered Gollum will replace line breaks with whitespace. The bugs fixed field will check the commit message and tries to detect
+if it contains bug fixes. Multiple bugs can be entered using comma or space as a separator. 
 
 The third part will normally be hidden. If the Bugzilla integration is active and something is entered in the bugs fixed field the third part will be shown. The first bug 
 entered in the bugs fixed field will be retrieved from Bugzilla and shown. Bug number and summary will be shown, but will not be editable. A comment can be added and the 
