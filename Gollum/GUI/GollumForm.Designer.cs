@@ -74,19 +74,17 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             // labelRevision
             // 
-            this.labelRevision.Location = new System.Drawing.Point(16, 20);
-            this.labelRevision.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelRevision.Location = new System.Drawing.Point(12, 16);
             this.labelRevision.Name = "labelRevision";
-            this.labelRevision.Size = new System.Drawing.Size(68, 16);
+            this.labelRevision.Size = new System.Drawing.Size(51, 13);
             this.labelRevision.TabIndex = 0;
             this.labelRevision.Text = "Revision";
             // 
             // labelReviewBoardDescription
             // 
-            this.labelReviewBoardDescription.Location = new System.Drawing.Point(16, 109);
-            this.labelReviewBoardDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelReviewBoardDescription.Location = new System.Drawing.Point(12, 89);
             this.labelReviewBoardDescription.Name = "labelReviewBoardDescription";
-            this.labelReviewBoardDescription.Size = new System.Drawing.Size(379, 16);
+            this.labelReviewBoardDescription.Size = new System.Drawing.Size(284, 13);
             this.labelReviewBoardDescription.TabIndex = 2;
             this.labelReviewBoardDescription.Text = "Review Board description";
             // 
@@ -95,12 +93,11 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxReviewBoardDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxReviewBoardDescription.Location = new System.Drawing.Point(16, 129);
-            this.textBoxReviewBoardDescription.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxReviewBoardDescription.Location = new System.Drawing.Point(12, 105);
             this.textBoxReviewBoardDescription.Multiline = true;
             this.textBoxReviewBoardDescription.Name = "textBoxReviewBoardDescription";
             this.textBoxReviewBoardDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxReviewBoardDescription.Size = new System.Drawing.Size(819, 76);
+            this.textBoxReviewBoardDescription.Size = new System.Drawing.Size(617, 62);
             this.textBoxReviewBoardDescription.TabIndex = 2;
             this.textBoxReviewBoardDescription.TextChanged += new System.EventHandler(this.TextBoxReviewBoardDescriptionTextChanged);
             // 
@@ -109,10 +106,9 @@ namespace Aidon.Tools.Gollum.GUI
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Dock = System.Windows.Forms.DockStyle.Right;
             this.buttonCancel.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonCancel.Location = new System.Drawing.Point(412, 19);
-            this.buttonCancel.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonCancel.Location = new System.Drawing.Point(317, 16);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(429, 59);
+            this.buttonCancel.Size = new System.Drawing.Size(314, 47);
             this.buttonCancel.TabIndex = 8;
             this.buttonCancel.Text = "No review";
             this.buttonCancel.Click += new System.EventHandler(this.ButtonCancelClick);
@@ -120,10 +116,9 @@ namespace Aidon.Tools.Gollum.GUI
             // labelReviewBoardSummaryError
             // 
             this.labelReviewBoardSummaryError.ForeColor = System.Drawing.Color.Red;
-            this.labelReviewBoardSummaryError.Location = new System.Drawing.Point(189, 26);
-            this.labelReviewBoardSummaryError.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelReviewBoardSummaryError.Location = new System.Drawing.Point(142, 21);
             this.labelReviewBoardSummaryError.Name = "labelReviewBoardSummaryError";
-            this.labelReviewBoardSummaryError.Size = new System.Drawing.Size(456, 16);
+            this.labelReviewBoardSummaryError.Size = new System.Drawing.Size(342, 13);
             this.labelReviewBoardSummaryError.TabIndex = 6;
             this.labelReviewBoardSummaryError.Text = "Review board summary and description are required!";
             this.labelReviewBoardSummaryError.Visible = false;
@@ -132,12 +127,11 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.textBoxReviewBoardSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxReviewBoardSummary.Location = new System.Drawing.Point(16, 46);
-            this.textBoxReviewBoardSummary.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxReviewBoardSummary.Location = new System.Drawing.Point(12, 37);
             this.textBoxReviewBoardSummary.Multiline = true;
             this.textBoxReviewBoardSummary.Name = "textBoxReviewBoardSummary";
             this.textBoxReviewBoardSummary.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxReviewBoardSummary.Size = new System.Drawing.Size(819, 59);
+            this.textBoxReviewBoardSummary.Size = new System.Drawing.Size(617, 49);
             this.textBoxReviewBoardSummary.TabIndex = 5;
             this.textBoxReviewBoardSummary.TextChanged += new System.EventHandler(this.TextBoxReviewBoardSummaryTextChanged);
             // 
@@ -145,49 +139,44 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.textBoxBugsFixed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxBugsFixed.Location = new System.Drawing.Point(93, 213);
-            this.textBoxBugsFixed.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxBugsFixed.Location = new System.Drawing.Point(70, 173);
             this.textBoxBugsFixed.Name = "textBoxBugsFixed";
-            this.textBoxBugsFixed.Size = new System.Drawing.Size(552, 22);
+            this.textBoxBugsFixed.Size = new System.Drawing.Size(417, 20);
             this.textBoxBugsFixed.TabIndex = 4;
             this.textBoxBugsFixed.TextChanged += new System.EventHandler(this.TextBoxBugsFixedTextChanged);
             // 
             // labelBugsFixed
             // 
             this.labelBugsFixed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelBugsFixed.Location = new System.Drawing.Point(13, 216);
-            this.labelBugsFixed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelBugsFixed.Location = new System.Drawing.Point(10, 176);
             this.labelBugsFixed.Name = "labelBugsFixed";
-            this.labelBugsFixed.Size = new System.Drawing.Size(80, 20);
+            this.labelBugsFixed.Size = new System.Drawing.Size(60, 16);
             this.labelBugsFixed.TabIndex = 3;
             this.labelBugsFixed.Text = "Bugs fixed";
             // 
             // labelReviewBoardSummary
             // 
-            this.labelReviewBoardSummary.Location = new System.Drawing.Point(16, 26);
-            this.labelReviewBoardSummary.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelReviewBoardSummary.Location = new System.Drawing.Point(12, 21);
             this.labelReviewBoardSummary.Name = "labelReviewBoardSummary";
-            this.labelReviewBoardSummary.Size = new System.Drawing.Size(168, 25);
+            this.labelReviewBoardSummary.Size = new System.Drawing.Size(126, 20);
             this.labelReviewBoardSummary.TabIndex = 2;
             this.labelReviewBoardSummary.Text = "Review Board summary";
             // 
             // labelCommitMessage
             // 
-            this.labelCommitMessage.Location = new System.Drawing.Point(16, 52);
-            this.labelCommitMessage.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelCommitMessage.Location = new System.Drawing.Point(12, 42);
             this.labelCommitMessage.Name = "labelCommitMessage";
-            this.labelCommitMessage.Size = new System.Drawing.Size(143, 23);
+            this.labelCommitMessage.Size = new System.Drawing.Size(107, 19);
             this.labelCommitMessage.TabIndex = 2;
             this.labelCommitMessage.Text = "Commit message";
             // 
             // progressBar
             // 
             this.progressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressBar.Location = new System.Drawing.Point(4, 78);
-            this.progressBar.Margin = new System.Windows.Forms.Padding(4);
+            this.progressBar.Location = new System.Drawing.Point(3, 63);
             this.progressBar.MarqueeAnimationSpeed = 30;
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(837, 28);
+            this.progressBar.Size = new System.Drawing.Size(628, 23);
             this.progressBar.TabIndex = 10;
             // 
             // groupBoxPostReview
@@ -196,12 +185,9 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxPostReview.Controls.Add(this.buttonCancel);
             this.groupBoxPostReview.Controls.Add(this.progressBar);
             this.groupBoxPostReview.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBoxPostReview.Location = new System.Drawing.Point(0, 613);
-            this.groupBoxPostReview.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBoxPostReview.MinimumSize = new System.Drawing.Size(845, 103);
+            this.groupBoxPostReview.Location = new System.Drawing.Point(0, 498);
             this.groupBoxPostReview.Name = "groupBoxPostReview";
-            this.groupBoxPostReview.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxPostReview.Size = new System.Drawing.Size(845, 110);
+            this.groupBoxPostReview.Size = new System.Drawing.Size(634, 89);
             this.groupBoxPostReview.TabIndex = 11;
             this.groupBoxPostReview.TabStop = false;
             this.groupBoxPostReview.Text = "Post review?";
@@ -209,12 +195,11 @@ namespace Aidon.Tools.Gollum.GUI
             // buttonPostReview
             // 
             this.buttonPostReview.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonPostReview.Dock = System.Windows.Forms.DockStyle.Right;
+            this.buttonPostReview.Dock = System.Windows.Forms.DockStyle.Left;
             this.buttonPostReview.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonPostReview.Location = new System.Drawing.Point(4, 19);
-            this.buttonPostReview.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonPostReview.Location = new System.Drawing.Point(3, 16);
             this.buttonPostReview.Name = "buttonPostReview";
-            this.buttonPostReview.Size = new System.Drawing.Size(408, 59);
+            this.buttonPostReview.Size = new System.Drawing.Size(314, 47);
             this.buttonPostReview.TabIndex = 11;
             this.buttonPostReview.Text = "Post review";
             this.buttonPostReview.Click += new System.EventHandler(this.ButtonPostReviewClick);
@@ -234,12 +219,8 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxSVN.Controls.Add(this.labelRevision);
             this.groupBoxSVN.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBoxSVN.Location = new System.Drawing.Point(0, 0);
-            this.groupBoxSVN.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBoxSVN.MaximumSize = new System.Drawing.Size(845, 148);
-            this.groupBoxSVN.MinimumSize = new System.Drawing.Size(845, 148);
             this.groupBoxSVN.Name = "groupBoxSVN";
-            this.groupBoxSVN.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxSVN.Size = new System.Drawing.Size(845, 148);
+            this.groupBoxSVN.Size = new System.Drawing.Size(634, 120);
             this.groupBoxSVN.TabIndex = 12;
             this.groupBoxSVN.TabStop = false;
             this.groupBoxSVN.Text = "SVN";
@@ -248,93 +229,80 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.textBoxSVNBranch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSVNBranch.Location = new System.Drawing.Point(648, 15);
-            this.textBoxSVNBranch.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxSVNBranch.Location = new System.Drawing.Point(486, 12);
             this.textBoxSVNBranch.Name = "textBoxSVNBranch";
             this.textBoxSVNBranch.ReadOnly = true;
-            this.textBoxSVNBranch.Size = new System.Drawing.Size(189, 22);
+            this.textBoxSVNBranch.Size = new System.Drawing.Size(142, 20);
             this.textBoxSVNBranch.TabIndex = 12;
             // 
             // labelBranch
             // 
-            this.labelBranch.Location = new System.Drawing.Point(587, 20);
-            this.labelBranch.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelBranch.Location = new System.Drawing.Point(440, 16);
             this.labelBranch.Name = "labelBranch";
-            this.labelBranch.Size = new System.Drawing.Size(59, 16);
+            this.labelBranch.Size = new System.Drawing.Size(44, 13);
             this.labelBranch.TabIndex = 11;
             this.labelBranch.Text = "branch";
             // 
             // textBoxSVNRepository
             // 
-            this.textBoxSVNRepository.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSVNRepository.Location = new System.Drawing.Point(385, 16);
-            this.textBoxSVNRepository.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxSVNRepository.Location = new System.Drawing.Point(289, 13);
             this.textBoxSVNRepository.Name = "textBoxSVNRepository";
             this.textBoxSVNRepository.ReadOnly = true;
-            this.textBoxSVNRepository.Size = new System.Drawing.Size(192, 22);
+            this.textBoxSVNRepository.Size = new System.Drawing.Size(145, 20);
             this.textBoxSVNRepository.TabIndex = 10;
             // 
             // labelOf
             // 
-            this.labelOf.Location = new System.Drawing.Point(347, 20);
-            this.labelOf.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelOf.Location = new System.Drawing.Point(260, 16);
             this.labelOf.Name = "labelOf";
-            this.labelOf.Size = new System.Drawing.Size(31, 16);
+            this.labelOf.Size = new System.Drawing.Size(23, 13);
             this.labelOf.TabIndex = 9;
             this.labelOf.Text = "of";
             // 
             // textBoxCommitMessage
             // 
-            this.textBoxCommitMessage.Location = new System.Drawing.Point(175, 48);
-            this.textBoxCommitMessage.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxCommitMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxCommitMessage.Location = new System.Drawing.Point(101, 39);
             this.textBoxCommitMessage.Multiline = true;
             this.textBoxCommitMessage.Name = "textBoxCommitMessage";
             this.textBoxCommitMessage.ReadOnly = true;
-            this.textBoxCommitMessage.Size = new System.Drawing.Size(661, 85);
+            this.textBoxCommitMessage.Size = new System.Drawing.Size(527, 70);
             this.textBoxCommitMessage.TabIndex = 8;
             // 
             // labelTo
             // 
-            this.labelTo.Location = new System.Drawing.Point(248, 20);
-            this.labelTo.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelTo.Location = new System.Drawing.Point(165, 15);
             this.labelTo.Name = "labelTo";
-            this.labelTo.Size = new System.Drawing.Size(25, 16);
+            this.labelTo.Size = new System.Drawing.Size(19, 13);
             this.labelTo.TabIndex = 7;
             this.labelTo.Text = "to";
             this.labelTo.Visible = false;
             // 
             // labelFrom
             // 
-            this.labelFrom.Location = new System.Drawing.Point(131, 20);
-            this.labelFrom.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelFrom.Location = new System.Drawing.Point(69, 16);
             this.labelFrom.Name = "labelFrom";
-            this.labelFrom.Size = new System.Drawing.Size(37, 16);
+            this.labelFrom.Size = new System.Drawing.Size(28, 13);
             this.labelFrom.TabIndex = 6;
             this.labelFrom.Text = "from";
             this.labelFrom.Visible = false;
             // 
             // textBoxRevisionTo
             // 
-            this.textBoxRevisionTo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxRevisionTo.Location = new System.Drawing.Point(272, 16);
-            this.textBoxRevisionTo.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxRevisionTo.Location = new System.Drawing.Point(190, 12);
             this.textBoxRevisionTo.Name = "textBoxRevisionTo";
             this.textBoxRevisionTo.ReadOnly = true;
-            this.textBoxRevisionTo.Size = new System.Drawing.Size(65, 22);
+            this.textBoxRevisionTo.Size = new System.Drawing.Size(54, 20);
             this.textBoxRevisionTo.TabIndex = 5;
             this.textBoxRevisionTo.Visible = false;
             // 
             // textBoxRevisionFrom
             // 
-            this.textBoxRevisionFrom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxRevisionFrom.Location = new System.Drawing.Point(176, 16);
-            this.textBoxRevisionFrom.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxRevisionFrom.Location = new System.Drawing.Point(101, 12);
             this.textBoxRevisionFrom.Name = "textBoxRevisionFrom";
             this.textBoxRevisionFrom.ReadOnly = true;
-            this.textBoxRevisionFrom.Size = new System.Drawing.Size(65, 22);
+            this.textBoxRevisionFrom.Size = new System.Drawing.Size(56, 20);
             this.textBoxRevisionFrom.TabIndex = 4;
             // 
             // groupBoxReviewBoard
@@ -348,28 +316,24 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxReviewBoard.Controls.Add(this.labelReviewBoardDescription);
             this.groupBoxReviewBoard.Controls.Add(this.labelReviewBoardSummary);
             this.groupBoxReviewBoard.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBoxReviewBoard.Location = new System.Drawing.Point(0, 148);
-            this.groupBoxReviewBoard.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBoxReviewBoard.MaximumSize = new System.Drawing.Size(843, 240);
-            this.groupBoxReviewBoard.MinimumSize = new System.Drawing.Size(843, 240);
+            this.groupBoxReviewBoard.Location = new System.Drawing.Point(0, 120);
             this.groupBoxReviewBoard.Name = "groupBoxReviewBoard";
-            this.groupBoxReviewBoard.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxReviewBoard.Size = new System.Drawing.Size(843, 240);
+            this.groupBoxReviewBoard.Size = new System.Drawing.Size(634, 195);
             this.groupBoxReviewBoard.TabIndex = 9;
             this.groupBoxReviewBoard.TabStop = false;
             this.groupBoxReviewBoard.Text = "Review Board";
             // 
             // checkBoxUpdateOnlyBugzilla
             // 
-            this.checkBoxUpdateOnlyBugzilla.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkBoxUpdateOnlyBugzilla.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxUpdateOnlyBugzilla.AutoSize = true;
             this.checkBoxUpdateOnlyBugzilla.Enabled = false;
-            this.checkBoxUpdateOnlyBugzilla.Location = new System.Drawing.Point(652, 212);
+            this.checkBoxUpdateOnlyBugzilla.Location = new System.Drawing.Point(505, 175);
+            this.checkBoxUpdateOnlyBugzilla.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxUpdateOnlyBugzilla.Name = "checkBoxUpdateOnlyBugzilla";
-            this.checkBoxUpdateOnlyBugzilla.Size = new System.Drawing.Size(159, 21);
+            this.checkBoxUpdateOnlyBugzilla.Size = new System.Drawing.Size(109, 17);
             this.checkBoxUpdateOnlyBugzilla.TabIndex = 7;
-            this.checkBoxUpdateOnlyBugzilla.Text = "Update only Bugzilla";
+            this.checkBoxUpdateOnlyBugzilla.Text = "Update only bugs";
             this.checkBoxUpdateOnlyBugzilla.UseVisualStyleBackColor = true;
             this.checkBoxUpdateOnlyBugzilla.CheckedChanged += new System.EventHandler(this.CheckBoxUpdateOnlyBugzillaCheckedChanged);
             // 
@@ -385,30 +349,26 @@ namespace Aidon.Tools.Gollum.GUI
             this.groupBoxBugzilla.Controls.Add(this.textBoxBugComment);
             this.groupBoxBugzilla.Controls.Add(this.textBoxBugSummary);
             this.groupBoxBugzilla.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxBugzilla.Location = new System.Drawing.Point(0, 388);
-            this.groupBoxBugzilla.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBoxBugzilla.Location = new System.Drawing.Point(0, 315);
             this.groupBoxBugzilla.Name = "groupBoxBugzilla";
-            this.groupBoxBugzilla.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxBugzilla.Size = new System.Drawing.Size(843, 225);
+            this.groupBoxBugzilla.Size = new System.Drawing.Size(634, 183);
             this.groupBoxBugzilla.TabIndex = 10;
             this.groupBoxBugzilla.TabStop = false;
             this.groupBoxBugzilla.Text = "Bugzilla";
             // 
             // labelDash
             // 
-            this.labelDash.Location = new System.Drawing.Point(161, 33);
-            this.labelDash.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelDash.Location = new System.Drawing.Point(121, 27);
             this.labelDash.Name = "labelDash";
-            this.labelDash.Size = new System.Drawing.Size(13, 16);
+            this.labelDash.Size = new System.Drawing.Size(10, 13);
             this.labelDash.TabIndex = 8;
             this.labelDash.Text = "-";
             // 
             // labelBug
             // 
-            this.labelBug.Location = new System.Drawing.Point(16, 33);
-            this.labelBug.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelBug.Location = new System.Drawing.Point(12, 27);
             this.labelBug.Name = "labelBug";
-            this.labelBug.Size = new System.Drawing.Size(37, 23);
+            this.labelBug.Size = new System.Drawing.Size(28, 19);
             this.labelBug.TabIndex = 7;
             this.labelBug.Text = "Bug";
             // 
@@ -416,11 +376,10 @@ namespace Aidon.Tools.Gollum.GUI
             // 
             this.textBoxBugNumber.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxBugNumber.Location = new System.Drawing.Point(55, 30);
-            this.textBoxBugNumber.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxBugNumber.Location = new System.Drawing.Point(41, 24);
             this.textBoxBugNumber.Name = "textBoxBugNumber";
             this.textBoxBugNumber.ReadOnly = true;
-            this.textBoxBugNumber.Size = new System.Drawing.Size(102, 22);
+            this.textBoxBugNumber.Size = new System.Drawing.Size(80, 20);
             this.textBoxBugNumber.TabIndex = 6;
             // 
             // comboBoxBugResolution
@@ -435,10 +394,9 @@ namespace Aidon.Tools.Gollum.GUI
             "WONTFIX",
             "DUPLICATE",
             "WORKSFORME"});
-            this.comboBoxBugResolution.Location = new System.Drawing.Point(510, 193);
-            this.comboBoxBugResolution.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxBugResolution.Location = new System.Drawing.Point(384, 157);
             this.comboBoxBugResolution.Name = "comboBoxBugResolution";
-            this.comboBoxBugResolution.Size = new System.Drawing.Size(325, 24);
+            this.comboBoxBugResolution.Size = new System.Drawing.Size(245, 21);
             this.comboBoxBugResolution.TabIndex = 5;
             // 
             // comboBoxBugStatus
@@ -452,29 +410,26 @@ namespace Aidon.Tools.Gollum.GUI
             "IN_PROGRESS",
             "RESOLVED",
             "VERIFIED"});
-            this.comboBoxBugStatus.Location = new System.Drawing.Point(174, 193);
-            this.comboBoxBugStatus.Margin = new System.Windows.Forms.Padding(4);
+            this.comboBoxBugStatus.Location = new System.Drawing.Point(132, 157);
             this.comboBoxBugStatus.Name = "comboBoxBugStatus";
-            this.comboBoxBugStatus.Size = new System.Drawing.Size(327, 24);
+            this.comboBoxBugStatus.Size = new System.Drawing.Size(246, 21);
             this.comboBoxBugStatus.TabIndex = 4;
             this.comboBoxBugStatus.SelectedValueChanged += new System.EventHandler(this.ComboBoxBugStatusSelectedValueChanged);
             // 
             // labelBugStatus
             // 
             this.labelBugStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelBugStatus.Location = new System.Drawing.Point(16, 197);
-            this.labelBugStatus.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelBugStatus.Location = new System.Drawing.Point(12, 160);
             this.labelBugStatus.Name = "labelBugStatus";
-            this.labelBugStatus.Size = new System.Drawing.Size(143, 20);
+            this.labelBugStatus.Size = new System.Drawing.Size(107, 16);
             this.labelBugStatus.TabIndex = 3;
             this.labelBugStatus.Text = "Bug status";
             // 
             // labelBugComment
             // 
-            this.labelBugComment.Location = new System.Drawing.Point(16, 57);
-            this.labelBugComment.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelBugComment.Location = new System.Drawing.Point(12, 46);
             this.labelBugComment.Name = "labelBugComment";
-            this.labelBugComment.Size = new System.Drawing.Size(149, 20);
+            this.labelBugComment.Size = new System.Drawing.Size(112, 16);
             this.labelBugComment.TabIndex = 2;
             this.labelBugComment.Text = "Bugzilla comment";
             // 
@@ -483,40 +438,35 @@ namespace Aidon.Tools.Gollum.GUI
             this.textBoxBugComment.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxBugComment.Location = new System.Drawing.Point(16, 80);
-            this.textBoxBugComment.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxBugComment.Location = new System.Drawing.Point(12, 65);
             this.textBoxBugComment.Multiline = true;
             this.textBoxBugComment.Name = "textBoxBugComment";
             this.textBoxBugComment.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxBugComment.Size = new System.Drawing.Size(819, 105);
+            this.textBoxBugComment.Size = new System.Drawing.Size(617, 86);
             this.textBoxBugComment.TabIndex = 2;
             // 
             // textBoxBugSummary
             // 
             this.textBoxBugSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxBugSummary.Location = new System.Drawing.Point(176, 30);
-            this.textBoxBugSummary.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxBugSummary.Location = new System.Drawing.Point(132, 24);
             this.textBoxBugSummary.Name = "textBoxBugSummary";
             this.textBoxBugSummary.ReadOnly = true;
-            this.textBoxBugSummary.Size = new System.Drawing.Size(659, 22);
+            this.textBoxBugSummary.Size = new System.Drawing.Size(497, 20);
             this.textBoxBugSummary.TabIndex = 0;
             // 
             // GollumForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(843, 723);
+            this.ClientSize = new System.Drawing.Size(634, 587);
             this.Controls.Add(this.groupBoxBugzilla);
             this.Controls.Add(this.groupBoxReviewBoard);
             this.Controls.Add(this.groupBoxSVN);
             this.Controls.Add(this.groupBoxPostReview);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(861, 770);
-            this.MinimumSize = new System.Drawing.Size(861, 545);
             this.Name = "GollumForm";
             this.Text = "Gollum";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GollumFormFormClosing);

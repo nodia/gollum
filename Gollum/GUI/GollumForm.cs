@@ -13,9 +13,13 @@ namespace Aidon.Tools.Gollum.GUI
 {
     public partial class GollumForm : Form
     {
-        private const int ClientHeightWithoutBugzilla = 545;
+        private const int ClientHeightWithoutBugzilla = 450;
 
-        private const int ClientHeightWithBugzilla = 770;
+        private const int ClientHeightWithBugzilla = 626;
+
+        private const int ClientWidth96Dpi = 650;
+
+        private const int DefaultDpi = 96;
 
         private const string ReviewBoardTicketUrl = "[ReviewBoardTicketUrl]";
 
@@ -27,10 +31,15 @@ namespace Aidon.Tools.Gollum.GUI
         private readonly Regex _bugMatcher;
         private readonly SubversionArguments _subversionArguments;
         private readonly ProjectSettings _projectSettings;
+        private readonly float _dpiX;
+        private readonly float _dpiY;
 
         public GollumForm(ProjectSettings projectSettings, SubversionArguments subversionArguments)
         {
             InitializeComponent();
+            var graphics = CreateGraphics();
+            _dpiX = graphics.DpiX;
+            _dpiY = graphics.DpiY;
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
             _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -451,10 +460,16 @@ namespace Aidon.Tools.Gollum.GUI
         {
             groupBoxBugzilla.Visible = visible;
             groupBoxBugzilla.Enabled = visible;
-            var size = visible ? new Size(Width, ClientHeightWithBugzilla) : new Size(Width, ClientHeightWithoutBugzilla);
+            var width = DpiScale(ClientWidth96Dpi, _dpiX);
+            var size = visible ? new Size(width, DpiScale(ClientHeightWithBugzilla, _dpiY)) : new Size(width, DpiScale(ClientHeightWithoutBugzilla, _dpiY));
             MaximumSize = size;
             MinimumSize = size;
             ClientSize = size;
+        }
+
+        private static int DpiScale(int value, float dpi)
+        {
+            return (int) (value * (dpi / DefaultDpi));
         }
 
         private void EnableUpdateOnlyBugzilla(bool update)

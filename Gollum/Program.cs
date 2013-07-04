@@ -162,7 +162,11 @@ namespace Aidon.Tools.Gollum
 
             try
             {
+#if TEST
+                svnArgs.Message = DummyPatchCreator.GetMessageForRevision(svnArgs).Result;
+#else
                 svnArgs.Message = SvnPatchCreator.GetMessageForRevision(svnArgs).Result;
+#endif
             }
             catch (Exception ex)
             {

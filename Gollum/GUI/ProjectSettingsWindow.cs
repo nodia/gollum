@@ -123,7 +123,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
 
             var cwd = textBoxProjectDirectory.Text;
-
+#if !TEST
             string projectRootDirectory;
             try
             {
@@ -134,7 +134,9 @@ namespace Aidon.Tools.Gollum.GUI
                 MessageBox.Show("Directory not gollum-compatible.");
                 return;
             }
-
+#else
+            const string projectRootDirectory = "C:\\";
+#endif
             var subversionArguments = new SubversionArguments
             {
                     RevisionTo = revisionTo,
@@ -147,8 +149,16 @@ namespace Aidon.Tools.Gollum.GUI
 
             try
             {
+#if TEST
+                subversionArguments.Message = await DummyPatchCreator.GetMessageForRevision(subversionArguments);
+                ProjectSettings = new ProjectSettings
+                {
+                    RepositoryBasePath = "/trunk", ReviewBoardGroup = "Ware", ReviewBoardRepositoryName = "Ware"
+                };
+#else
                 subversionArguments.Message = await SvnPatchCreator.GetMessageForRevision(subversionArguments);
                 ProjectSettings = ProjectSettings.Load(Path.Combine(subversionArguments.LocalProjectRootDirectory, ProjectSettings.DefaultFileName));
+#endif
                 SubversionArguments = subversionArguments;
             }
             catch (Exception ex)

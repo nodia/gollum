@@ -46,22 +46,26 @@ namespace Aidon.Tools.Gollum
                 throw new InvalidOperationException("ReviewBoard url is required.");
             }
             
-            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
-
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
 
+#if TEST
+            _patchCreator = new DummyPatchCreator();
+            _reviewBoardHandler = new DummyReviewBoardHandler();
+#if !NOBUGZILLA
+            _bugzillaClient = new DummyBugzillaRestClient();
+#else
+            _bugzillaClient = null;
+#endif
+#else
             _patchCreator = new SvnPatchCreator();
-            //_patchCreator = new DummyPatchCreator();
-
             _reviewBoardHandler = new ReviewBoardRestClient(reviewBoardUrl);
-            //_reviewBoardHandler = new DummyReviewBoardHandler();
-
+            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
             if (!String.IsNullOrEmpty(bugzillaUrl))
             {
                 _bugzillaClient = new BugzillaRestClient(bugzillaUrl);
-                //_bugzillaClient = new DummyBugzillaRestClient();
             }
+#endif
         }
 
         /// <summary>
