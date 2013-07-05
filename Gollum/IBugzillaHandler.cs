@@ -1,10 +1,12 @@
-﻿using Aidon.Tools.Gollum.Bugzilla;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Aidon.Tools.Gollum.Bugzilla;
 
 namespace Aidon.Tools.Gollum
 {
     public interface IBugzillaHandler
     {
-        void PostToBugzilla(BugzillaArguments arguments);
-        BugzillaBug GetBugInformation(BugzillaArguments arguments);
+        Task PostToBugzillaAsync(BugzillaArguments arguments);
+        Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationToken token);
     }
 }

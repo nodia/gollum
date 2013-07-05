@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Aidon.Tools.Gollum.Bugzilla;
 using Aidon.Tools.Gollum.ReviewBoard;
 using Aidon.Tools.Gollum.SVN;
@@ -23,12 +25,6 @@ namespace Aidon.Tools.Gollum
     /// <param name="message">The message.</param>
     public delegate void Update(string message);
 
-    /// <summary>
-    /// Delegate for sending the review board ticket url back to the user interface as soon as it is discovered.
-    /// </summary>
-    /// <param name="url">The URL.</param>
-    public delegate void ReviewBoardTicketUrlDiscovered(string url);
-
     public class GollumEngine
     {
         private readonly SubversionArguments _subversionArguments;
@@ -39,26 +35,37 @@ namespace Aidon.Tools.Gollum
         private readonly IBugzillaHandler _bugzillaClient;
 
         public event Update UpdateStatus;
-        public event ReviewBoardTicketUrlDiscovered TicketDiscovered;
         public event CredentialCallback CredentialsCallback;
 
         public GollumEngine(SubversionArguments subversionArguments, ProjectSettings projectSettings)
         {
+            var reviewBoardUrl = ConfigurationManager.AppSettings["ReviewBoardUrl"];
+
+            if (String.IsNullOrEmpty(reviewBoardUrl))
+            {
+                throw new InvalidOperationException("ReviewBoard url is required.");
+            }
+            
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
 
+#if TEST
+            _patchCreator = new DummyPatchCreator();
+            _reviewBoardHandler = new DummyReviewBoardHandler();
+#if !NOBUGZILLA
+            _bugzillaClient = new DummyBugzillaRestClient();
+#else
+            _bugzillaClient = null;
+#endif
+#else
             _patchCreator = new SvnPatchCreator();
-            
-            var reviewBoardUrl = ConfigurationManager.AppSettings["ReviewBoardUrl"];
-            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
-
             _reviewBoardHandler = new ReviewBoardRestClient(reviewBoardUrl);
-            _reviewBoardHandler.ReviewIdDiscovered += ReviewBoardHandlerOnReviewIdDiscovered;
-
+            var bugzillaUrl = ConfigurationManager.AppSettings["BugzillaUrl"];
             if (!String.IsNullOrEmpty(bugzillaUrl))
             {
                 _bugzillaClient = new BugzillaRestClient(bugzillaUrl);
             }
+#endif
         }
 
         /// <summary>
@@ -115,32 +122,33 @@ namespace Aidon.Tools.Gollum
         /// <param name="summary">The review summary.</param>
         /// <param name="description">The review description.</param>
         /// <param name="bugs">The review fixed bugs.</param>
-        /// <returns></returns>
-        public bool PostToReviewBoard(string summary, string description, string bugs)
+        /// <returns>
+        /// True if posting to review board succeeds; otherwise, false.
+        /// </returns>
+        public async Task<ReviewBoardResponse> PostToReviewBoardAsync(string summary, string description, string bugs)
         {
             try
             {
                 PostUpdate("Creating diff...");
 
-                string patch = _patchCreator.CreatePatch(_subversionArguments);
+                string patch = await _patchCreator.CreatePatchAsync(_subversionArguments).ConfigureAwait(false);
 
                 PostUpdate("Diff created. Creating review ticket...");
 
                 var arguments = new ReviewBoardArguments
-                    {
-                        CredentialCallback = CredentialCallback,
-                        Description = description,
-                        Group = _projectSettings.ReviewBoardGroup,
-                        BaseDirectory = FigureOutRepositoryPath(),
-                        Repository = _projectSettings.ReviewBoardRepositoryName,
-                        Summary = summary,
-                        Bugs = bugs,
-                        DiffFile = patch
-                    };
+                {
+                    CredentialCallback = CredentialCallback,
+                    Description = description,
+                    Group = _projectSettings.ReviewBoardGroup,
+                    BaseDirectory = FigureOutRepositoryPath(),
+                    Repository = _projectSettings.ReviewBoardRepositoryName,
+                    Summary = summary,
+                    Bugs = bugs,
+                    DiffFile = patch
+                };
 
-                _reviewBoardHandler.PostToReviewBoard(arguments);
-
-                return true;
+                var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
+                return response;
             }
             catch (ReviewBoardAuthenticationException)
             {
@@ -152,12 +160,12 @@ namespace Aidon.Tools.Gollum
             }
             catch (Exception)
             {
-                return false;
+                return null;
             }
         }
 
         /// <summary>
-        /// Posts an bug update to bugzilla.
+        /// Posts a bug update to bugzilla.
         /// </summary>
         /// <param name="bugNumber">The bug number.</param>
         /// <param name="resolution">The resolution.</param>
@@ -165,43 +173,39 @@ namespace Aidon.Tools.Gollum
         /// <param name="comment">The comment.</param>
         /// <param name="updateToken">The update token.</param>
         /// <returns></returns>
-        public bool PostToBugzilla(string bugNumber, string resolution, string status, string comment, string updateToken)
+        public async Task PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
         {
-            try
+            UpdateStatus("Updating Bugzilla...");
+            var arguments = new BugzillaArguments
             {
-                UpdateStatus("Updating Bugzilla...");
-                var arguments = new BugzillaArguments
-                {
-                    BugId = bugNumber,
-                    UpdateToken = updateToken,
-                    Comment = comment,
-                    Resolution = resolution,
-                    Status = status
-                };
+                BugId = bugNumber,
+                UpdateToken = updateToken,
+                Comment = comment,
+                Resolution = resolution,
+                Status = status
+            };
 
-                _bugzillaClient.PostToBugzilla(arguments);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            await _bugzillaClient.PostToBugzillaAsync(arguments).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Gets the bug information.
         /// </summary>
         /// <param name="bugNumber">The bug number.</param>
-        /// <returns>Bugzilla bug information.</returns>
-        public BugzillaBug GetBugInformation(string bugNumber)
+        /// <param name="token">The token.</param>
+        /// <returns>
+        /// Bugzilla bug information.
+        /// </returns>
+        public async Task<BugzillaBug> GetBugInformationAsync(string bugNumber, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
             var arguments = new BugzillaArguments
             {
                 UpdateToken = bugNumber,
                 CredentialCallback = CredentialCallback
             };
 
-            return _bugzillaClient.GetBugInformation(arguments);
+            return await _bugzillaClient.GetBugInformationAsync(arguments, token).ConfigureAwait(false);
         }
 
         private void PostUpdate(string message)
@@ -214,12 +218,7 @@ namespace Aidon.Tools.Gollum
 
         private Credentials CredentialCallback(string title)
         {
-            if (CredentialsCallback == null)
-            {
-                return null;
-            }
-
-            return CredentialsCallback(title);
+            return CredentialsCallback == null ? null : CredentialsCallback(title);
         }
 
         private string FigureOutRepositoryPath()
@@ -233,22 +232,12 @@ namespace Aidon.Tools.Gollum
         private static string CombinePathsInUnixFormat(string basePath, string relativePath)
         {
             var result = new StringBuilder(basePath);
-            if (!(basePath.EndsWith("/") || relativePath.StartsWith("/")))
+            if (!(basePath.EndsWith("/") || relativePath.StartsWith("/", StringComparison.Ordinal)))
             {
                 result.Append('/');
             }
             result.Append(relativePath);
             return result.ToString();
-        }
-
-        private void ReviewBoardHandlerOnReviewIdDiscovered(object sender, ReviewIdDiscoveredEventArgs reviewIdDiscoveredEventArgs)
-        {
-            PostUpdate("Review ticket created. Uploading diff...");
-
-            if (TicketDiscovered != null)
-            {
-                TicketDiscovered(reviewIdDiscoveredEventArgs.ReviewBoardTicketLink);
-            }
         }
     }
 }

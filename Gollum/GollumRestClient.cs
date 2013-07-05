@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
+using System.Threading.Tasks;
 using RestSharp;
 
 namespace Aidon.Tools.Gollum
@@ -13,15 +16,21 @@ namespace Aidon.Tools.Gollum
     /// </summary>
     public abstract class GollumRestClient
     {
+
+        /// <summary>
+        /// The default timeout for IO using the REST client.
+        /// </summary>
+        protected static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
+
         /// <summary>
         /// The REST client.
         /// </summary>
-        public RestClient Client;
+        protected readonly RestClient Client;
 
         /// <summary>
         /// Used to determine if we need to get the cookie or if we already have it saved.
         /// </summary>
-        public bool HasCookie { get; private set; }
+        private bool HasCookie { get; set; }
 
         private readonly string _directory;
 
@@ -40,7 +49,7 @@ namespace Aidon.Tools.Gollum
         /// Checks if a valid cookies already exist on this machine and sets them to the client cookie container. 
         /// </summary>
         /// <returns>True if a cookie or cookies exist and are not expired.</returns>
-        public bool ReadCookies()
+        protected bool ReadCookies()
         {
             var cookies = ReadCookiesFromFile();
             if (cookies != null && cookies.Count > 0)
@@ -64,7 +73,7 @@ namespace Aidon.Tools.Gollum
         /// Reads the isolated storage file to see if there is a cookie with the given name saved in it.
         /// </summary>
         /// <returns> Cookie, null if not found. </returns>
-        public CookieCollection ReadCookiesFromFile()
+        private CookieCollection ReadCookiesFromFile()
         {
             try
             {
@@ -87,6 +96,7 @@ namespace Aidon.Tools.Gollum
             }
             catch (Exception)
             {
+                ClearCookieFile();
                 return null;
             }
         }
@@ -94,18 +104,25 @@ namespace Aidon.Tools.Gollum
         /// <summary>
         /// Clears the cookie files from the specified directory.
         /// </summary>
-        public void ClearCookieFile()
+        protected void ClearCookieFile()
         {
-            using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
+            try
             {
-                var files = isolatedStorageFile.GetFileNames(_directory + "/*");
-
-                foreach (var file in files.Where(file => file != null))
+                using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    isolatedStorageFile.DeleteFile(file);
-                }
+                    var files = isolatedStorageFile.GetFileNames(_directory + "/*");
 
-                isolatedStorageFile.DeleteDirectory(_directory);
+                    foreach (var file in files.Where(file => file != null))
+                    {
+                        isolatedStorageFile.DeleteFile(file);
+                    }
+
+                    isolatedStorageFile.DeleteDirectory(_directory);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
             }
         }
 
@@ -113,7 +130,7 @@ namespace Aidon.Tools.Gollum
         /// Gets the cookie from the reponse, sets it to the cookie container and saves it to storage file.
         /// </summary>
         /// <param name="response">The response.</param>
-        public void ProcessResponseCookies(RestResponse response)
+        protected void ProcessResponseCookies(IRestResponse response)
         {
             if (HasCookie || response == null)
             {
@@ -129,14 +146,14 @@ namespace Aidon.Tools.Gollum
             foreach (var restResponseCookie in response.Cookies)
             {
                 cookies.Add(new Cookie
-                    {
-                        Name = restResponseCookie.Name,
-                        Value = restResponseCookie.Value,
-                        Path = restResponseCookie.Path,
-                        Domain = restResponseCookie.Domain,
-                        Expires = restResponseCookie.Expires,
-                        Expired = restResponseCookie.Expired
-                    });
+                {
+                    Name = restResponseCookie.Name,
+                    Value = restResponseCookie.Value,
+                    Path = restResponseCookie.Path,
+                    Domain = restResponseCookie.Domain,
+                    Expires = restResponseCookie.Expires,
+                    Expired = restResponseCookie.Expired
+                });
             }
 
             Client.CookieContainer = new CookieContainer();
@@ -154,7 +171,7 @@ namespace Aidon.Tools.Gollum
         /// </summary>
         /// <param name="cookies">Cookies to save</param>
         /// <returns>True if succesful, false otherwise</returns>
-        public bool SaveCookiesToFile(CookieCollection cookies)
+        private void SaveCookiesToFile(CookieCollection cookies)
         {
             try
             {
@@ -177,12 +194,77 @@ namespace Aidon.Tools.Gollum
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                Debug.WriteLine(ex);
+            }
+        }
+
+        /// <summary>
+        /// Executes the request and callback asynchronously.
+        /// </summary>
+        /// <remarks>
+        /// See pull request in GitHub:
+        /// https://github.com/restsharp/RestSharp/pull/367
+        /// </remarks>
+        /// <param name="request">Request to be executed</param>
+        /// <param name="token">The cancellation token</param>
+        /// <returns>
+        /// A task that represents the asynchronous request. 
+        /// The Result property of the task contains the <see cref="IRestResponse"/> when the request completes. 
+        /// </returns>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if cancellation is requested before entering this method.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        /// Thrown if <paramref name="token"/> is being disposed of.
+        /// </exception>
+        protected Task<IRestResponse> ExecuteAsync(IRestRequest request, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var taskCompletionSource = new TaskCompletionSource<IRestResponse>();
+
+            try
+            {
+                var async = Client.ExecuteAsync(request, (response, handle) =>
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        // do nothing since token has a registered callback to handle cancellation
+                        return; 
+                    }
+
+                    if (response.ErrorException == null)
+                    {
+                        if (response.ResponseStatus == ResponseStatus.Completed)
+                        {
+                            taskCompletionSource.TrySetResult(response);
+                        }
+                        else
+                        {
+                            taskCompletionSource.TrySetException(
+                                new InvalidOperationException(String.Format("An error occurred: received status code '{0}', response status '{1}' response from the server.", 
+                                                                            response.StatusCode, response.ResponseStatus)));
+                        }
+                    }
+                    else
+                    {
+                        taskCompletionSource.TrySetException(response.ErrorException);
+                    }
+                });
+
+                token.Register(() =>
+                {
+                    taskCompletionSource.TrySetCanceled();
+                    async.Abort();
+                });
+            }
+            catch (Exception ex)
+            {
+                taskCompletionSource.TrySetException(ex);
             }
 
-            return true;
+            return taskCompletionSource.Task;
         }
     }
 }

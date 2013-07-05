@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using RestSharp;
 using RestSharp.Deserializers;
 
@@ -11,8 +13,6 @@ namespace Aidon.Tools.Gollum.ReviewBoard
     /// </summary>
     public class ReviewBoardRestClient : GollumRestClient, IReviewBoardHandler
     {
-        public event EventHandler<ReviewIdDiscoveredEventArgs> ReviewIdDiscovered;
-
         private readonly string _clientUrl;
 
         public ReviewBoardRestClient(string clientUrl) : base("GollumReviewBoard", clientUrl.TrimEnd('/') + "/api/")
@@ -24,56 +24,54 @@ namespace Aidon.Tools.Gollum.ReviewBoard
         /// Posts a new review request to review board.
         /// </summary>
         /// <param name="arguments">The arguments.</param>
-        /// <returns>Response filled with good data.</returns>
+        /// <returns>
+        /// Response filled with good data.
+        /// </returns>
         /// <exception cref="ReviewBoardException">Thrown if the review cannot be posted.</exception>
-        public ReviewBoardResponse PostToReviewBoard(ReviewBoardArguments arguments)
+        public async Task<ReviewBoardResponse> PostToReviewBoardAsync(ReviewBoardArguments arguments)
         {
-            return PostReviewRequest(arguments);
+            if (!Login(arguments))
+            {
+                throw new ReviewBoardException("Invalid login details.");
+            }
+
+            var reviewRequest = await PostReviewDraftAsync(arguments.Repository).ConfigureAwait(false);
+            if (reviewRequest == null)
+            {
+                throw new ReviewBoardException("Unable to post review!");
+            }
+
+            await AddReviewDiffAsync(reviewRequest.Id, arguments.BaseDirectory, arguments.DiffFile).ConfigureAwait(false);
+
+            reviewRequest.Summary = arguments.Summary;
+            reviewRequest.Description = arguments.Description;
+            reviewRequest.Groups = arguments.Group;
+            reviewRequest.Public = true;
+            reviewRequest.BugsClosed = arguments.Bugs;
+
+            await UpdateReviewRequestAsync(reviewRequest).ConfigureAwait(false);
+
+            return new ReviewBoardResponse
+            {
+                ReviewTicketId = reviewRequest.Id.ToString(CultureInfo.InvariantCulture),
+                ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id,
+            };
         }
 
-        private ReviewBoardResponse PostReviewRequest(ReviewBoardArguments arguments)
+        private bool Login(ReviewBoardArguments arguments)
         {
-            try
+            if (ReadCookies())
             {
-                if (!ReadCookies())
-                {
-                    if (arguments.CredentialCallback != null)
-                    {
-                        var credentials = arguments.CredentialCallback("Review Board login");
-                        Client.Authenticator = new HttpBasicAuthenticator(credentials.Username, credentials.Password);
-                    }
-                }
-
-                var reviewRequest = PostReviewDraft(arguments.Repository);
-                if (reviewRequest == null)
-                {
-                    throw new ReviewBoardException("Unable to post review!");
-                }
-
-                OnReviewIdDiscovered(_clientUrl + @"r/" + reviewRequest.Id);
-
-                AddReviewDiff(reviewRequest.Id, arguments.BaseDirectory, arguments.DiffFile);
-
-                reviewRequest.Summary = arguments.Summary;
-                reviewRequest.Description = arguments.Description;
-                reviewRequest.Groups = arguments.Group;
-                reviewRequest.Public = true;
-                reviewRequest.BugsClosed = arguments.Bugs;
-
-                UpdateReviewRequest(reviewRequest);
-
-                var reviewBoardResponse = new ReviewBoardResponse
-                    {
-                        ReviewTicketId = reviewRequest.Id.ToString(CultureInfo.InvariantCulture),
-                        ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id
-                    };
-
-                return reviewBoardResponse;
+                return true;
             }
-            catch (ReviewBoardAuthenticationException)
+
+            if (arguments.CredentialCallback == null)
             {
-                return PostReviewRequest(arguments);
+                return false;
             }
+            var credentials = arguments.CredentialCallback("Review Board login");
+            Client.Authenticator = new HttpBasicAuthenticator(credentials.Username, credentials.Password);
+            return true;
         }
 
         /// <summary>
@@ -81,14 +79,14 @@ namespace Aidon.Tools.Gollum.ReviewBoard
         /// </summary>
         /// <param name="response">The response.</param>
         /// <exception cref="ReviewBoardException">Throw if the REST call was unsuccesful.</exception>
-        private void CheckResponse(RestResponse response)
+        private void CheckResponse(IRestResponse response)
         {
             if (response == null)
             {
                 throw new ReviewBoardException("Null response from review board.");
             }
 
-            if (response.Content.IndexOf("\"err\":", StringComparison.Ordinal) > 0)
+            if (response.Content.IndexOf("\"err\":", StringComparison.Ordinal) >= 0)
             {
                 ReviewBoardErrorResponse error;
                 try
@@ -119,13 +117,13 @@ namespace Aidon.Tools.Gollum.ReviewBoard
             ProcessResponseCookies(response);
         }
 
-        private void UpdateReviewRequest(ReviewBoardReviewRequest reviewRequest)
+        private async Task UpdateReviewRequestAsync(ReviewBoardReviewRequest reviewRequest)
         {
             var request = new RestRequest
-                {
-                    Resource = "review-requests/" + reviewRequest.Id + "/draft/",
-                    Method = Method.PUT
-                };
+            {
+                Resource = "review-requests/" + reviewRequest.Id + "/draft/",
+                Method = Method.PUT
+            };
 
             request.AddParameter("summary", reviewRequest.Summary);
             request.AddParameter("public", reviewRequest.Public.ToString());
@@ -137,8 +135,12 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 request.AddParameter("bugs_closed", reviewRequest.BugsClosed);
             }
 
-            RestResponse response = Client.Execute(request);
-            CheckResponse(response);
+            using (var tokenSource = new CancellationTokenSource())
+            {
+                tokenSource.CancelAfter(DefaultTimeout);
+                var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(response);
+            }
         }
 
         /// <summary>
@@ -147,40 +149,49 @@ namespace Aidon.Tools.Gollum.ReviewBoard
         /// <param name="reviewId">The review id.</param>
         /// <param name="baseDirectory">The base directory.</param>
         /// <param name="diffFile">The diff file.</param>
-        private void AddReviewDiff(int reviewId, string baseDirectory, string diffFile)
+        /// <returns></returns>
+        private async Task AddReviewDiffAsync(int reviewId, string baseDirectory, string diffFile)
         {
             var request = new RestRequest { Resource = "review-requests/" + reviewId + "/diffs/", Method = Method.POST };
             request.AddParameter("basedir", baseDirectory);
-            string filename = Path.GetFileName(diffFile);
+            var filename = Path.GetFileName(diffFile);
 
             request.AddFile("path", FileToByteArray(diffFile), filename, "multipart/form-data");
-
-            RestResponse response = Client.Execute(request);
-            CheckResponse(response);
+            using (var tokenSource = new CancellationTokenSource())
+            {
+                tokenSource.CancelAfter(DefaultTimeout);
+                var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(response);
+            }
         }
 
         /// <summary>
-        /// Posts a new review request draft to the specified repository. 
+        /// Posts a new review request draft to the specified repository.
         /// </summary>
         /// <param name="repository">The repository.</param>
-        /// <returns>ReviewRequest containing the ID of the created request.</returns>
-        private ReviewBoardReviewRequest PostReviewDraft(string repository)
+        /// <returns>
+        /// ReviewRequest containing the ID of the created request.
+        /// </returns>
+        /// <exception cref="ReviewBoardException">Unable to deserialize response.</exception>
+        private async Task<ReviewBoardReviewRequest> PostReviewDraftAsync(string repository)
         {
             var request = new RestRequest { Resource = "review-requests/", Method = Method.POST };
             request.AddParameter("repository", repository);
-
-            RestResponse response = Client.Execute(request);
-
-            CheckResponse(response);
-
-            try
+            using (var tokenSource = new CancellationTokenSource())
             {
-                var deserializer = new JsonDeserializer { RootElement = "review_request" };
-                return deserializer.Deserialize<ReviewBoardReviewRequest>(response);
-            }
-            catch (Exception e)
-            {
-                throw new ReviewBoardException("Unable to deserialize response.", e);
+                tokenSource.CancelAfter(DefaultTimeout);
+                var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
+                CheckResponse(response);
+
+                try
+                {
+                    var deserializer = new JsonDeserializer { RootElement = "review_request" };
+                    return deserializer.Deserialize<ReviewBoardReviewRequest>(response);
+                }
+                catch (Exception e)
+                {
+                    throw new ReviewBoardException("Unable to deserialize response.", e);
+                }
             }
         }
 
@@ -198,23 +209,14 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 {
                     using (var binaryReader = new BinaryReader(fileStream))
                     {
-                        long totalBytes = new FileInfo(filename).Length;
-                        return binaryReader.ReadBytes((Int32)totalBytes);
+                        var totalBytes = (int)new FileInfo(filename).Length;
+                        return binaryReader.ReadBytes(totalBytes);
                     }
                 }
             }
             catch (Exception e)
             {
                 throw new ReviewBoardException("Unable to read svn diff file!", e);
-            }
-        }
-
-        protected virtual void OnReviewIdDiscovered(string url)
-        {
-            EventHandler<ReviewIdDiscoveredEventArgs> handler = ReviewIdDiscovered;
-            if (handler != null)
-            {
-                handler(this, new ReviewIdDiscoveredEventArgs { ReviewBoardTicketLink = url });
             }
         }
     }
