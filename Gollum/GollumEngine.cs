@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -131,7 +132,7 @@ namespace Aidon.Tools.Gollum
             {
                 PostUpdate("Creating diff...");
 
-                string patch = await _patchCreator.CreatePatchAsync(_subversionArguments).ConfigureAwait(false);
+                string patch = await _patchCreator.CreatePatchAsync(_subversionArguments);
 
                 PostUpdate("Diff created. Creating review ticket...");
 
@@ -158,8 +159,9 @@ namespace Aidon.Tools.Gollum
             {
                 throw;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 return null;
             }
         }
