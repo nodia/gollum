@@ -125,6 +125,9 @@ namespace Aidon.Tools.Gollum.Bugzilla
                 case "50":
                     ClearCookieFile();
                     throw new BugzillaAuthenticationException();
+                case "410":
+                    ClearCookieFile();
+                    throw new BugzillaInvalidLoginCredentialsException("Found invalid bugzilla login credentials, please login again.");
                 default:
                     var e = new BugzillaException("A Bugzilla error occured. Code: " + faultCode + ". Message: " + faultString);
                     e.Data.Add("Error details", response.Content);
@@ -180,7 +183,6 @@ namespace Aidon.Tools.Gollum.Bugzilla
             var response = await ExecuteAsync(request, token).ConfigureAwait(false);
             CheckResponse(response);
             return new BugzillaBug(response.Content);
-            
         }
     }
 }

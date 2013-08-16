@@ -85,7 +85,8 @@ namespace Aidon.Tools.Gollum
 
                     foreach (var file in files.Where(file => file != null))
                     {
-                        using (var isolatedStorageFileStream = isolatedStorageFile.OpenFile(_directory + "/" + file, FileMode.Open, FileAccess.Read))
+                        var fullName = Path.Combine(_directory, file);
+                        using (var isolatedStorageFileStream = isolatedStorageFile.OpenFile(fullName, FileMode.Open, FileAccess.Read))
                         {
                             cookies.Add((Cookie)formatter.Deserialize(isolatedStorageFileStream));
                         }
@@ -114,10 +115,17 @@ namespace Aidon.Tools.Gollum
 
                     foreach (var file in files.Where(file => file != null))
                     {
-                        isolatedStorageFile.DeleteFile(file);
+                        var fullName = Path.Combine(_directory, file);
+                        if (isolatedStorageFile.FileExists(fullName))
+                        {
+                            isolatedStorageFile.DeleteFile(fullName);
+                        }
                     }
 
-                    isolatedStorageFile.DeleteDirectory(_directory);
+                    if (isolatedStorageFile.DirectoryExists(_directory))
+                    {
+                        isolatedStorageFile.DeleteDirectory(_directory);
+                    }
                 }
             }
             catch (Exception ex)

@@ -344,10 +344,10 @@ namespace Aidon.Tools.Gollum.GUI
             UpdateStatus(GetReviewButtonText(), true);
         }
 
-        private async Task SetBugDisplay()
+        private async Task SetBugDisplay(bool retry = false)
         {
             _bug = null;
-
+            bool retryOnError = false;
             try
             {
                 InitializeCancellation();
@@ -359,7 +359,11 @@ namespace Aidon.Tools.Gollum.GUI
                 _bug = null;
                 if (ex is BugzillaAuthenticationException)
                 {
-                    MessageBox.Show(this, "BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    string askAgainMessage = (!retry ? Environment.NewLine + Environment.NewLine + "Would you like to try again?" : "");
+                    if (MessageBox.Show(this, "BugZilla authentication failed. " + ex.Message + askAgainMessage, "Authentication error", !retry ? MessageBoxButtons.YesNo : MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.Yes && !retry)
+                    {
+                        retryOnError = true;
+                    }
                 }
                 else if (ex is BugzillaException)
                 {
@@ -374,6 +378,11 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 UpdateBugFields();
                 StopProgressBar();
+            }
+
+            if (retryOnError)
+            {
+                await SetBugDisplay(true);
             }
         }
 
