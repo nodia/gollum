@@ -160,13 +160,14 @@ namespace Aidon.Tools.Gollum.Bugzilla
             }
         }
 
-        public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationToken token)
+        public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationTokenSource tokenSource)
         {
-            token.ThrowIfCancellationRequested();
+            tokenSource.Token.ThrowIfCancellationRequested();
 
             await Login(arguments).ConfigureAwait(false);
-
-            token.ThrowIfCancellationRequested();
+            
+            tokenSource.Token.ThrowIfCancellationRequested();
+            tokenSource.CancelAfter(DefaultTimeout);
 
             var xml = new XmlRequest
             {
@@ -180,7 +181,7 @@ namespace Aidon.Tools.Gollum.Bugzilla
             var request = new RestRequest { Method = Method.POST, RequestFormat = DataFormat.Xml };
             request.AddParameter("text/xml", xml.ToString(), ParameterType.RequestBody);
 
-            var response = await ExecuteAsync(request, token).ConfigureAwait(false);
+            var response = await ExecuteAsync(request, tokenSource.Token).ConfigureAwait(false);
             CheckResponse(response);
             return new BugzillaBug(response.Content);
         }

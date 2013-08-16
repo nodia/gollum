@@ -436,11 +436,10 @@ namespace Aidon.Tools.Gollum.GUI
                 }
 
                 UpdateStatus(String.Format("Loading information about bug #{0}...", nextBug));
-                cancel.CancelAfter(TimeSpan.FromSeconds(60));
                 
                 try
                 {
-                    var bug = await _engine.GetBugInformationAsync(nextBug, cancel.Token);
+                    var bug = await _engine.GetBugInformationAsync(nextBug, cancel);
                     if (bug != null)
                     {
                         EnableUpdateOnlyBugzilla(true);

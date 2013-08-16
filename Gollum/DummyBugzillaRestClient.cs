@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Aidon.Tools.Gollum.Bugzilla;
 
@@ -11,9 +12,10 @@ namespace Aidon.Tools.Gollum
             await Task.Delay(3000).ConfigureAwait(false);
         }
 
-        public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationToken token)
+        public async Task<BugzillaBug> GetBugInformationAsync(BugzillaArguments arguments, CancellationTokenSource tokenSource)
         {
-            await Task.Delay(3000, token).ConfigureAwait(false);
+            tokenSource.CancelAfter(TimeSpan.FromSeconds(4));
+            await Task.Delay(3000, tokenSource.Token).ConfigureAwait(false);
             return new BugzillaBug("<bug></bug>");
         }
     }

@@ -194,20 +194,20 @@ namespace Aidon.Tools.Gollum
         /// Gets the bug information.
         /// </summary>
         /// <param name="bugNumber">The bug number.</param>
-        /// <param name="token">The token.</param>
+        /// <param name="tokenSource">The cancel token source.</param>
         /// <returns>
         /// Bugzilla bug information.
         /// </returns>
-        public async Task<BugzillaBug> GetBugInformationAsync(string bugNumber, CancellationToken token)
+        public async Task<BugzillaBug> GetBugInformationAsync(string bugNumber, CancellationTokenSource tokenSource)
         {
-            token.ThrowIfCancellationRequested();
+            tokenSource.Token.ThrowIfCancellationRequested();
             var arguments = new BugzillaArguments
             {
                 UpdateToken = bugNumber,
                 CredentialCallback = CredentialCallback
             };
 
-            return await _bugzillaClient.GetBugInformationAsync(arguments, token).ConfigureAwait(false);
+            return await _bugzillaClient.GetBugInformationAsync(arguments, tokenSource).ConfigureAwait(false);
         }
 
         private void PostUpdate(string message)
