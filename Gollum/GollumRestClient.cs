@@ -81,7 +81,7 @@ namespace Aidon.Tools.Gollum
                 var formatter = new BinaryFormatter();
                 using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    var files = isolatedStorageFile.GetFileNames(_directory + "/*");
+                    var files = isolatedStorageFile.GetFileNames(_directory + "\\*");
 
                     foreach (var file in files.Where(file => file != null))
                     {
@@ -111,7 +111,7 @@ namespace Aidon.Tools.Gollum
             {
                 using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    var files = isolatedStorageFile.GetFileNames(_directory + "/*");
+                    var files = isolatedStorageFile.GetFileNames(_directory + "\\*");
 
                     foreach (var file in files.Where(file => file != null))
                     {
@@ -195,7 +195,7 @@ namespace Aidon.Tools.Gollum
                     {
                         var cookie = cookies[i];
 
-                        using (var isolatedStorageFileStream = isolatedStorageFile.OpenFile(_directory + "/" + cookie.Name, FileMode.Create, FileAccess.Write))
+                        using (var isolatedStorageFileStream = isolatedStorageFile.OpenFile(Path.Combine(_directory, cookie.Name), FileMode.Create, FileAccess.Write))
                         {
                             formatter.Serialize(isolatedStorageFileStream, cookie);
                         }

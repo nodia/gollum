@@ -353,6 +353,7 @@ namespace Aidon.Tools.Gollum.GUI
                 InitializeCancellation();
                 await Task.Delay(1500, _getBugCancellation.Token);
                 _bug = await GetBugInformationAsync();
+                UpdateBugFields();
             }
             catch (Exception ex)
             {
@@ -365,18 +366,15 @@ namespace Aidon.Tools.Gollum.GUI
                         retryOnError = true;
                     }
                 }
-                else if (ex is BugzillaException)
+                else
                 {
-                    textBoxBugSummary.Text = ex.Message;
-                }
-                else if (!(ex is ObjectDisposedException || ex is OperationCanceledException))
-                {
-                    UpdateStatus("Could not get bug status.", true);
+                    textBoxBugSummary.Text = "Could not get bug status.";
+                    textBoxBugComment.Text = ex.ToString();
+                    ToggleBugzillaVisibility(true);
                 }
             }
             finally
             {
-                UpdateBugFields();
                 StopProgressBar();
             }
 
