@@ -465,6 +465,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.Controls.Add(this.groupBoxReviewBoard);
             this.Controls.Add(this.groupBoxSVN);
             this.Controls.Add(this.groupBoxPostReview);
+            this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "GollumForm";

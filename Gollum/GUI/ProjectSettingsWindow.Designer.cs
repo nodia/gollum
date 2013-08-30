@@ -236,6 +236,7 @@
             this.ClientSize = new System.Drawing.Size(493, 328);
             this.Controls.Add(this.groupBoxSubmitOldRevision);
             this.Controls.Add(this.groupBoxInstallation);
+            this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(509, 366);

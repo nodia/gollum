@@ -33,10 +33,10 @@ namespace Aidon.Tools.Gollum.GUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CredentialsWindow));
             this.textBoxUserName = new System.Windows.Forms.TextBox();
             this.labelUserName = new System.Windows.Forms.Label();
-            this.textBoxPassword = new TextBox();
+            this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.labelPassword = new System.Windows.Forms.Label();
-            this.buttonOk = new Button();
-            this.buttonCancel = new Button();
+            this.buttonOk = new System.Windows.Forms.Button();
+            this.buttonCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxUserName
@@ -54,7 +54,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelUserName.TabIndex = 1;
             this.labelUserName.Text = "User name";
             // 
-            // tbPassword
+            // textBoxPassword
             // 
             this.textBoxPassword.Location = new System.Drawing.Point(76, 38);
             this.textBoxPassword.Name = "textBoxPassword";
@@ -70,7 +70,7 @@ namespace Aidon.Tools.Gollum.GUI
             this.labelPassword.TabIndex = 1;
             this.labelPassword.Text = "Password";
             // 
-            // btnOk
+            // buttonOk
             // 
             this.buttonOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.buttonOk.Location = new System.Drawing.Point(117, 66);
@@ -79,14 +79,14 @@ namespace Aidon.Tools.Gollum.GUI
             this.buttonOk.TabIndex = 2;
             this.buttonOk.Text = "OK";
             // 
-            // btnCancel
+            // buttonCancel
             // 
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Location = new System.Drawing.Point(198, 66);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 3;
             this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.Click += new System.EventHandler(this.ButtonCancelClick);
             // 
             // CredentialsWindow
             // 
@@ -100,12 +100,19 @@ namespace Aidon.Tools.Gollum.GUI
             this.Controls.Add(this.labelUserName);
             this.Controls.Add(this.textBoxPassword);
             this.Controls.Add(this.textBoxUserName);
+            this.DoubleBuffered = true;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "CredentialsWindow";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Login";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion

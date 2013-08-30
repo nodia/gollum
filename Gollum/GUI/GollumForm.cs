@@ -2,17 +2,20 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Aidon.Tools.Gollum.Bugzilla;
+using Aidon.Tools.Gollum.ReviewBoard;
 using Aidon.Tools.Gollum.SVN;
 
 namespace Aidon.Tools.Gollum.GUI
 {
     public partial class GollumForm : Form
     {
+
         private const int ClientHeightWithoutBugzilla = 450;
 
         private const int ClientHeightWithBugzilla = 626;
@@ -44,6 +47,10 @@ namespace Aidon.Tools.Gollum.GUI
             _subversionArguments = subversionArguments;
             _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             ToggleBugzillaVisibility(false);
+            var filestream = new FileStream("gollum.log", FileMode.Create);
+            var streamwriter = new StreamWriter(filestream) { AutoFlush = true };
+            Console.SetError(streamwriter);
+            Console.SetOut(streamwriter);
         }
 
         #region GollumEngine event handlers
@@ -55,9 +62,14 @@ namespace Aidon.Tools.Gollum.GUI
 
         private Credentials EngineOnCredentialsCallback(string title)
         {
-            var cw = new CredentialsWindow(title);
-            var result = cw.ShowDialog(this);
-            return result == DialogResult.OK ? cw.GetCredentials() : null;
+            using (var cw = new CredentialsWindow(title))
+            {
+                if (cw.ShowDialog(this) == DialogResult.OK)
+                {
+                    return cw.GetCredentials();
+                }
+                throw new TaskCanceledException("User canceled login operation.");
+            }
         }
 
         #endregion
@@ -79,6 +91,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
             }
@@ -105,6 +118,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
             catch (Exception e)
             {
+                Console.WriteLine(e);
                 if (e.Data["Error details"] != null)
                 {
                     string errorDetails = e.Data["Error details"].ToString();
@@ -344,43 +358,43 @@ namespace Aidon.Tools.Gollum.GUI
             UpdateStatus(GetReviewButtonText(), true);
         }
 
-        private async Task SetBugDisplay(bool retry = false)
+        private async Task SetBugDisplay()
         {
             _bug = null;
-            bool retryOnError = false;
-            try
+            while (true)
             {
-                InitializeCancellation();
-                await Task.Delay(1500, _getBugCancellation.Token);
-                _bug = await GetBugInformationAsync();
-                UpdateBugFields();
-            }
-            catch (Exception ex)
-            {
-                _bug = null;
-                if (ex is BugzillaAuthenticationException)
+                try
                 {
-                    string askAgainMessage = (!retry ? Environment.NewLine + Environment.NewLine + "Would you like to try again?" : "");
-                    if (MessageBox.Show(this, "BugZilla authentication failed. " + ex.Message + askAgainMessage, "Authentication error", !retry ? MessageBoxButtons.YesNo : MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.Yes && !retry)
+                    InitializeCancellation();
+                    await Task.Delay(1500, _getBugCancellation.Token);
+                    _bug = await GetBugInformationAsync();
+                    UpdateBugFields();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (ex is TaskCanceledException)
                     {
-                        retryOnError = true;
+                        UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone ? "Update bug" : "Post review", true);
+                        return;
+                    }
+
+                    Console.WriteLine(ex);
+
+                    _bug = null;
+
+                    if (!(ex is BugzillaAuthenticationException))
+                    {
+                        MessageBox.Show(this, "Could not get bug status. See log for more information.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        ToggleBugzillaVisibility(false);
+                        UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone ? "Update bug" : "Post review", true);
+                        return;
                     }
                 }
-                else
+                finally
                 {
-                    textBoxBugSummary.Text = "Could not get bug status.";
-                    textBoxBugComment.Text = ex.ToString();
-                    ToggleBugzillaVisibility(true);
+                    StopProgressBar();
                 }
-            }
-            finally
-            {
-                StopProgressBar();
-            }
-
-            if (retryOnError)
-            {
-                await SetBugDisplay(true);
             }
         }
 
@@ -394,7 +408,7 @@ namespace Aidon.Tools.Gollum.GUI
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine("Failed to cancel and cleanup existing cancellation token: {0}", ex.Message);
+                    Console.WriteLine("Failed to cancel and cleanup existing cancellation token: {0}", ex.Message);
                 }
                 finally
                 {
@@ -447,7 +461,7 @@ namespace Aidon.Tools.Gollum.GUI
                 }
                 catch (BugzillaException ex)
                 {
-                    Debug.WriteLine(ex);
+                    Console.WriteLine(ex);
                     lastException = ex;
                 }
             }
@@ -501,7 +515,18 @@ namespace Aidon.Tools.Gollum.GUI
                     groupBoxBugzilla.Enabled = false;
                     buttonCancel.Enabled = false;
                     buttonPostReview.Enabled = false;
-                    success = await PostToReviewBoard();
+                    while (true)
+                    {
+                        try
+                        {
+                            success = await PostToReviewBoard();
+                            break;
+                        }
+                        catch (ReviewBoardAuthenticationException ex)
+                        {
+                            Console.WriteLine("Reviewboard authentication failed: " + ex);
+                        }
+                    }
                     _reviewBoardDone = success;
                     UpdateStatus(success ? "Review ticket created..." : "Failed to create review ticket!");
                     await Task.Delay(1000);
@@ -509,20 +534,29 @@ namespace Aidon.Tools.Gollum.GUI
 
                 if ((_reviewBoardDone || updateOnlyBugzilla) && _engine.BugzillaEnabled && _bug != null)
                 {
-                    await PostToBugzillaAsync();
+                    while (true)
+                    {
+                        try
+                        {
+                            await PostToBugzillaAsync();
+                            break;
+                        }
+                        catch (BugzillaAuthenticationException ex)
+                        {
+                            Console.WriteLine("Bugzilla authentication failed: " + ex);
+                        }
+                    }
                 }
                 return success;
             }
-            catch (BugzillaAuthenticationException)
+            catch (TaskCanceledException)
             {
-                success = false;
-                MessageBox.Show("BugZilla authentication failed.", "Authentication error", MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
                 return false;
             }
             catch (Exception ex)
             {
                 success = false;
+                Console.WriteLine(ex);
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }

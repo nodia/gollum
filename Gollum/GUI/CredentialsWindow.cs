@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aidon.Tools.Gollum.GUI
@@ -19,11 +20,6 @@ namespace Aidon.Tools.Gollum.GUI
         public Credentials GetCredentials()
         {
             return new Credentials { Password = textBoxPassword.Text, Username = textBoxUserName.Text };
-        }
-
-        private void ButtonCancelClick(object sender, EventArgs e)
-        {
-            throw new Exception("User cancelled login.");
         }
     }
 }

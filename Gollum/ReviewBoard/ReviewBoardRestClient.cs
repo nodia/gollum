@@ -32,7 +32,7 @@ namespace Aidon.Tools.Gollum.ReviewBoard
         {
             if (!Login(arguments))
             {
-                throw new ReviewBoardException("Invalid login details.");
+                throw new ReviewBoardAuthenticationException();
             }
 
             var reviewRequest = await PostReviewDraftAsync(arguments.Repository).ConfigureAwait(false);

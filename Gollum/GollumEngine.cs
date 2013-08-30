@@ -161,7 +161,7 @@ namespace Aidon.Tools.Gollum
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                Console.WriteLine(ex);
                 return null;
             }
         }

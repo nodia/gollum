@@ -32,6 +32,9 @@ namespace Aidon.Tools.Gollum
         /// </summary>
         private bool HasCookie { get; set; }
 
+        /// <summary>
+        /// Directory name in the isolated storage.
+        /// </summary>
         private readonly string _directory;
 
         /// <summary>
@@ -81,7 +84,13 @@ namespace Aidon.Tools.Gollum
                 var formatter = new BinaryFormatter();
                 using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    var files = isolatedStorageFile.GetFileNames(_directory + "\\*");
+                    if (!isolatedStorageFile.DirectoryExists(_directory))
+                    {
+                        return null;
+                    }
+
+                    var path = _directory + "\\*";
+                    var files = isolatedStorageFile.GetFileNames(path);
 
                     foreach (var file in files.Where(file => file != null))
                     {
@@ -95,8 +104,9 @@ namespace Aidon.Tools.Gollum
                     return cookies;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 ClearCookieFile();
                 return null;
             }
@@ -111,8 +121,12 @@ namespace Aidon.Tools.Gollum
             {
                 using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    var files = isolatedStorageFile.GetFileNames(_directory + "\\*");
+                    if (!isolatedStorageFile.DirectoryExists(_directory))
+                    {
+                        return;
+                    }
 
+                    var files = isolatedStorageFile.GetFileNames(_directory + "\\*");
                     foreach (var file in files.Where(file => file != null))
                     {
                         var fullName = Path.Combine(_directory, file);
@@ -121,16 +135,12 @@ namespace Aidon.Tools.Gollum
                             isolatedStorageFile.DeleteFile(fullName);
                         }
                     }
-
-                    if (isolatedStorageFile.DirectoryExists(_directory))
-                    {
-                        isolatedStorageFile.DeleteDirectory(_directory);
-                    }
+                    isolatedStorageFile.DeleteDirectory(_directory);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                Console.WriteLine(ex);
             }
         }
 
@@ -186,7 +196,9 @@ namespace Aidon.Tools.Gollum
                 var formatter = new BinaryFormatter();
                 using (var isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly())
                 {
-                    if (isolatedStorageFile.GetDirectoryNames(_directory).Length == 0)
+
+
+                    if (!isolatedStorageFile.DirectoryExists(_directory))
                     {
                         isolatedStorageFile.CreateDirectory(_directory);
                     }
@@ -204,7 +216,7 @@ namespace Aidon.Tools.Gollum
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                Console.WriteLine(ex);
             }
         }
 
