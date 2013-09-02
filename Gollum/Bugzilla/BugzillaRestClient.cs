@@ -122,11 +122,9 @@ namespace Aidon.Tools.Gollum.Bugzilla
                 case "301":
                 case "305":
                 case "50":
-                    ClearCookieFile();
-                    throw new BugzillaAuthenticationException();
                 case "410":
                     ClearCookieFile();
-                    throw new BugzillaInvalidLoginCredentialsException("Found invalid bugzilla login credentials, please login again.");
+                    throw new BugzillaAuthenticationException();
                 default:
                     var e = new BugzillaException("A Bugzilla error occured. Code: " + faultCode + ". Message: " + faultString);
                     e.Data.Add("Error details", response.Content);

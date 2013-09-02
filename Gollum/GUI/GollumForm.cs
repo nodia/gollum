@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -365,36 +364,46 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 try
                 {
+                    StartProgressBar();
                     InitializeCancellation();
+
                     await Task.Delay(1500, _getBugCancellation.Token);
                     _bug = await GetBugInformationAsync();
+
                     UpdateBugFields();
                     return;
                 }
                 catch (Exception ex)
                 {
+                    _bug = null;
+
+                    checkBoxUpdateOnlyBugzilla.Checked = false;
+                    ToggleBugzillaVisibility(false);
+
                     if (ex is TaskCanceledException)
                     {
-                        UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone ? "Update bug" : "Post review", true);
+                        UpdateStatus("Post review", true);
                         return;
                     }
 
                     Console.WriteLine(ex);
 
-                    _bug = null;
-
                     if (!(ex is BugzillaAuthenticationException))
                     {
                         MessageBox.Show(this, "Could not get bug status. See log for more information.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        ToggleBugzillaVisibility(false);
-                        UpdateStatus(checkBoxUpdateOnlyBugzilla.Checked || _reviewBoardDone ? "Update bug" : "Post review", true);
+                        UpdateStatus("Post review", true);
                         return;
                     }
+                    
+                    UpdateStatus("Authentication failed");
+                    
                 }
                 finally
                 {
                     StopProgressBar();
                 }
+
+                await Task.Delay(1500);
             }
         }
 
@@ -431,11 +440,11 @@ namespace Aidon.Tools.Gollum.GUI
             cancel.Token.ThrowIfCancellationRequested();
 
             ToggleBugzillaVisibility(false);
-            StartProgressBar();
 
             Exception lastException = null;
 
             var numbers = textBoxBugsFixed.Text.Split(new [] { " ", "," }, StringSplitOptions.RemoveEmptyEntries);
+
             foreach (var bugNumber in numbers)
             {
                 cancel.Token.ThrowIfCancellationRequested();
@@ -472,7 +481,7 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 throw lastException;
             }
-
+            
             return null;
         }
 
