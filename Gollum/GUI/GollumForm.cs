@@ -46,10 +46,6 @@ namespace Aidon.Tools.Gollum.GUI
             _subversionArguments = subversionArguments;
             _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             ToggleBugzillaVisibility(false);
-            var filestream = new FileStream("gollum.log", FileMode.Create);
-            var streamwriter = new StreamWriter(filestream) { AutoFlush = true };
-            Console.SetError(streamwriter);
-            Console.SetOut(streamwriter);
         }
 
         #region GollumEngine event handlers
@@ -87,6 +83,13 @@ namespace Aidon.Tools.Gollum.GUI
                 FillFields(_engine.CommitMessage, _engine.CommitRevisionFrom, _engine.CommitRevisionTo, _engine.RepositoryBasePath, _engine.ReviewBoardRepositoryName);
                 textBoxReviewBoardSummary.Focus();
                 BringToFront();
+
+                var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gollum.log");
+                var filestream = new FileStream(logPath, FileMode.Create);
+                var streamwriter = new StreamWriter(filestream) { AutoFlush = true };
+                Console.SetError(streamwriter);
+                Console.SetOut(streamwriter);
+
             }
             catch (Exception ex)
             {
