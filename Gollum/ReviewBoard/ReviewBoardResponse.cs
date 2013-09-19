@@ -4,5 +4,6 @@
     {
         public string ReviewUrl { get; set; }
         public string ReviewTicketId { get; set; }
+        public ReviewBoardReviewRequest ReviewRequest { get; set; }
     }
 }

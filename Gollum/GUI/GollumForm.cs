@@ -77,6 +77,7 @@ namespace Aidon.Tools.Gollum.GUI
             {
                 _engine = new GollumEngine(_subversionArguments, _projectSettings);
                 _engine.UpdateStatus += EngineOnUpdateStatus;
+                _engine.CopyToClipboard += SetTicketUrlToClipboard;
                 _engine.CredentialsCallback += EngineOnCredentialsCallback;
                 _formShown = true;
                 checkBoxUpdateOnlyBugzilla.Visible = _engine.BugzillaEnabled;
@@ -211,6 +212,18 @@ namespace Aidon.Tools.Gollum.GUI
 
         #endregion
 
+        private void SetTicketUrlToClipboard(object sender, CopyToClipboardEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker)(() => SetTicketUrlToClipboard(e.Message)));
+            }
+            else
+            {
+                SetTicketUrlToClipboard(e.Message);
+            }
+        }
+
         private void SetTicketUrlToClipboard(string url)
         {
             Clipboard.SetText(url);
@@ -220,16 +233,10 @@ namespace Aidon.Tools.Gollum.GUI
             }
         }
 
-        private async Task<bool> PostToReviewBoard()
+        private async Task PostToReviewBoard()
         {
             StartProgressBar();
-            var response = await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text);
-            if (response != null)
-            {
-                SetTicketUrlToClipboard(response.ReviewUrl);
-                return true;
-            }
-            return false;
+            await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text);
         }
 
         private void StartProgressBar()
@@ -531,7 +538,8 @@ namespace Aidon.Tools.Gollum.GUI
                     {
                         try
                         {
-                            success = await PostToReviewBoard();
+                            await PostToReviewBoard();
+                            success = true;
                             break;
                         }
                         catch (ReviewBoardAuthenticationException ex)
@@ -539,8 +547,7 @@ namespace Aidon.Tools.Gollum.GUI
                             Console.WriteLine("Reviewboard authentication failed: " + ex);
                         }
                     }
-                    _reviewBoardDone = success;
-                    UpdateStatus(success ? "Review ticket created..." : "Failed to create review ticket!");
+                    _reviewBoardDone = true;
                     await Task.Delay(1000);
                 }
 
@@ -559,7 +566,7 @@ namespace Aidon.Tools.Gollum.GUI
                         }
                     }
                 }
-                return success;
+                return true;
             }
             catch (TaskCanceledException)
             {

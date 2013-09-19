@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -37,6 +36,7 @@ namespace Aidon.Tools.Gollum
 
         public event Update UpdateStatus;
         public event CredentialCallback CredentialsCallback;
+        public event EventHandler<CopyToClipboardEventArgs> CopyToClipboard;
 
         public GollumEngine(SubversionArguments subversionArguments, ProjectSettings projectSettings)
         {
@@ -126,7 +126,7 @@ namespace Aidon.Tools.Gollum
         /// <returns>
         /// True if posting to review board succeeds; otherwise, false.
         /// </returns>
-        public async Task<ReviewBoardResponse> PostToReviewBoardAsync(string summary, string description, string bugs)
+        public async Task PostToReviewBoardAsync(string summary, string description, string bugs)
         {
             try
             {
@@ -149,7 +149,12 @@ namespace Aidon.Tools.Gollum
                 };
 
                 var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
-                return response;
+                OnCopyToClipboard(response.ReviewUrl);
+
+                PostUpdate("Uploading diff...");
+                await _reviewBoardHandler.UploadDiffAsync(response.ReviewRequest, arguments).ConfigureAwait(false);
+
+                PostUpdate("Diff uploaded...");
             }
             catch (ReviewBoardAuthenticationException)
             {
@@ -162,7 +167,7 @@ namespace Aidon.Tools.Gollum
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return null;
+                throw;
             }
         }
 
@@ -215,6 +220,14 @@ namespace Aidon.Tools.Gollum
             if (UpdateStatus != null)
             {
                 UpdateStatus(message);
+            }
+        }
+
+        private void OnCopyToClipboard(string message)
+        {
+            if (CopyToClipboard != null)
+            {
+                CopyToClipboard(this, new CopyToClipboardEventArgs(message));
             }
         }
 

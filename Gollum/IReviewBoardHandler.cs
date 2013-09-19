@@ -17,5 +17,12 @@ namespace Aidon.Tools.Gollum
         /// </returns>
         /// <exception cref="ReviewBoardException">Thrown if the review cannot be posted.</exception>
         Task<ReviewBoardResponse> PostToReviewBoardAsync(ReviewBoardArguments arguments);
+
+        /// <summary>
+        /// Uploads the diff.
+        /// </summary>
+        /// <param name="reviewRequest">The review request.</param>
+        /// <param name="arguments">The arguments.</param>
+        Task UploadDiffAsync(ReviewBoardReviewRequest reviewRequest, ReviewBoardArguments arguments);
     }
 }

@@ -61,6 +61,7 @@
     <Compile Include="Bugzilla\BugzillaBug.cs" />
     <Compile Include="Bugzilla\BugzillaException.cs" />
     <Compile Include="Bugzilla\BugzillaRestClient.cs" />
+    <Compile Include="CopyToClipboardEventArgs.cs" />
     <Compile Include="DummyBugzillaRestClient.cs" />
     <Compile Include="GollumEngine.cs" />
     <Compile Include="GollumRestClient.cs" />

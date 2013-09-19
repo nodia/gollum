@@ -41,6 +41,38 @@ namespace Aidon.Tools.Gollum.ReviewBoard
                 throw new ReviewBoardException("Unable to post review!");
             }
 
+            return new ReviewBoardResponse
+            {
+                ReviewTicketId = reviewRequest.Id.ToString(CultureInfo.InvariantCulture),
+                ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id,
+                ReviewRequest = reviewRequest
+            };
+        }
+
+        /// <summary>
+        /// Uploads the diff.
+        /// </summary>
+        /// <param name="reviewRequest">The review request.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">arguments</exception>
+        /// <exception cref="ReviewBoardAuthenticationException"></exception>
+        public async Task UploadDiffAsync(ReviewBoardReviewRequest reviewRequest, ReviewBoardArguments arguments)
+        {
+            if (reviewRequest == null)
+            {
+                throw new ArgumentNullException("reviewRequest");
+            }
+            if (arguments == null)
+            {
+                throw new ArgumentNullException("arguments");
+            }
+
+            if (!Login(arguments))
+            {
+                throw new ReviewBoardAuthenticationException();
+            }
+
             await AddReviewDiffAsync(reviewRequest.Id, arguments.BaseDirectory, arguments.DiffFile).ConfigureAwait(false);
 
             reviewRequest.Summary = arguments.Summary;
@@ -50,12 +82,6 @@ namespace Aidon.Tools.Gollum.ReviewBoard
             reviewRequest.BugsClosed = arguments.Bugs;
 
             await UpdateReviewRequestAsync(reviewRequest).ConfigureAwait(false);
-
-            return new ReviewBoardResponse
-            {
-                ReviewTicketId = reviewRequest.Id.ToString(CultureInfo.InvariantCulture),
-                ReviewUrl = _clientUrl + @"r/" + reviewRequest.Id,
-            };
         }
 
         private bool Login(ReviewBoardArguments arguments)

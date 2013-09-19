@@ -9,8 +9,12 @@ namespace Aidon.Tools.Gollum
         {
             await Task.Delay(1000);
             arguments.CredentialCallback("Review Board login");
-            await Task.Delay(2000).ConfigureAwait(false);
             return new ReviewBoardResponse { ReviewTicketId = "121", ReviewUrl = "http://intra/reviewboard/121/" };
+        }
+
+        public async Task UploadDiffAsync(ReviewBoardReviewRequest reviewRequest, ReviewBoardArguments arguments)
+        {
+            await Task.Delay(2000).ConfigureAwait(false);
         }
     }
 }
