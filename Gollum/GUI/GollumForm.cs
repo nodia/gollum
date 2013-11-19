@@ -162,6 +162,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
             else
             {
+                UpdateStatus(GetReviewButtonText(), true);
                 if (textBoxReviewBoardSummary.Text != summary)
                 {
                     // removed only line changes
@@ -171,7 +172,6 @@ namespace Aidon.Tools.Gollum.GUI
                 }
                 UpdateFixedBugsField(summary);
                 labelReviewBoardSummaryError.Visible = false;
-                UpdateStatus(GetReviewButtonText(), true);
             }
         }
 
@@ -376,6 +376,7 @@ namespace Aidon.Tools.Gollum.GUI
                 {
                     StartProgressBar();
                     InitializeCancellation();
+                    UpdateStatus(GetReviewButtonText());
 
                     await Task.Delay(1500, _getBugCancellation.Token);
                     _bug = await GetBugInformationAsync();
