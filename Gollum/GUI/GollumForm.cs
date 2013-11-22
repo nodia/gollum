@@ -50,7 +50,7 @@ namespace Aidon.Tools.Gollum.GUI
 
         #region GollumEngine event handlers
 
-        private void EngineOnUpdateStatus(string message)
+        private void OnProgressChanged(object sender, string message)
         {
             UpdateStatus(message);
         }
@@ -76,7 +76,7 @@ namespace Aidon.Tools.Gollum.GUI
             try
             {
                 _engine = new GollumEngine(_subversionArguments, _projectSettings);
-                _engine.UpdateStatus += EngineOnUpdateStatus;
+                _engine.ProgressChanged += OnProgressChanged;
                 _engine.CopyToClipboard += SetTicketUrlToClipboard;
                 _engine.CredentialsCallback += EngineOnCredentialsCallback;
                 _formShown = true;

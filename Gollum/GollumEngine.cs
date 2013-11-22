@@ -25,7 +25,7 @@ namespace Aidon.Tools.Gollum
     /// <param name="message">The message.</param>
     public delegate void Update(string message);
 
-    public class GollumEngine
+    public class GollumEngine : Progress<string>
     {
         private readonly SubversionArguments _subversionArguments;
         private readonly ProjectSettings _projectSettings;
@@ -34,7 +34,6 @@ namespace Aidon.Tools.Gollum
         private readonly IReviewBoardHandler _reviewBoardHandler;
         private readonly IBugzillaHandler _bugzillaClient;
 
-        public event Update UpdateStatus;
         public event CredentialCallback CredentialsCallback;
         public event EventHandler<CopyToClipboardEventArgs> CopyToClipboard;
 
@@ -130,11 +129,11 @@ namespace Aidon.Tools.Gollum
         {
             try
             {
-                PostUpdate("Creating diff...");
+                OnReport("Creating diff...");
 
                 string patch = await _patchCreator.CreatePatchAsync(_subversionArguments);
 
-                PostUpdate("Diff created. Creating review ticket...");
+                OnReport("Diff created. Creating review ticket...");
 
                 var arguments = new ReviewBoardArguments
                 {
@@ -151,10 +150,10 @@ namespace Aidon.Tools.Gollum
                 var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
                 OnCopyToClipboard(response.ReviewUrl);
 
-                PostUpdate("Uploading diff...");
+                OnReport("Uploading diff...");
                 await _reviewBoardHandler.UploadDiffAsync(response.ReviewRequest, arguments).ConfigureAwait(false);
 
-                PostUpdate("Diff uploaded...");
+                OnReport("Diff uploaded...");
             }
             catch (ReviewBoardAuthenticationException)
             {
@@ -182,7 +181,7 @@ namespace Aidon.Tools.Gollum
         /// <returns></returns>
         public async Task PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
         {
-            UpdateStatus("Updating Bugzilla...");
+            OnReport("Updating Bugzilla...");
             var arguments = new BugzillaArguments
             {
                 BugId = bugNumber,
@@ -213,14 +212,6 @@ namespace Aidon.Tools.Gollum
             };
 
             return await _bugzillaClient.GetBugInformationAsync(arguments, tokenSource).ConfigureAwait(false);
-        }
-
-        private void PostUpdate(string message)
-        {
-            if (UpdateStatus != null)
-            {
-                UpdateStatus(message);
-            }
         }
 
         private void OnCopyToClipboard(string message)
