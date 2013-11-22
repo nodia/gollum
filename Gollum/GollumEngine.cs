@@ -19,12 +19,6 @@ namespace Aidon.Tools.Gollum
     /// </returns>
     public delegate Credentials CredentialCallback(string title);
 
-    /// <summary>
-    /// Delegate for sending update messages back to the user interface.
-    /// </summary>
-    /// <param name="message">The message.</param>
-    public delegate void Update(string message);
-
     public class GollumEngine : Progress<string>
     {
         private readonly SubversionArguments _subversionArguments;
