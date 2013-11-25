@@ -121,11 +121,12 @@ namespace Aidon.Tools.Gollum
         /// </returns>
         public async Task PostToReviewBoardAsync(string summary, string description, string bugs)
         {
+            string filename = null;
             try
             {
                 OnReport("Creating diff...");
 
-                string patch = await _patchCreator.CreatePatchAsync(_subversionArguments);
+                filename = await _patchCreator.CreatePatchAsync(_subversionArguments);
 
                 OnReport("Diff created. Creating review ticket...");
 
@@ -138,7 +139,7 @@ namespace Aidon.Tools.Gollum
                     Repository = _projectSettings.ReviewBoardRepositoryName,
                     Summary = summary,
                     Bugs = bugs,
-                    DiffFile = patch
+                    DiffFile = filename
                 };
 
                 var response = await _reviewBoardHandler.PostToReviewBoardAsync(arguments).ConfigureAwait(false);
@@ -161,6 +162,20 @@ namespace Aidon.Tools.Gollum
             {
                 Console.WriteLine(ex);
                 throw;
+            }
+            finally
+            {
+                if (!String.IsNullOrEmpty(filename))
+                {
+                    try
+                    {
+                        File.Delete(filename);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Failed to delete file '{0}': {1}", filename, ex);
+                    }
+                }
             }
         }
 

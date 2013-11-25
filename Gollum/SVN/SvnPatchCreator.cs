@@ -19,12 +19,11 @@ namespace Aidon.Tools.Gollum.SVN
         /// A task that represents the asynchronous patch operation. 
         /// The value of the Result property contains the file path of created patch file.
         /// </returns>
-        /// <exception cref="System.Exception">
+        /// <exception cref="ArgumentException">
         /// Thrown when revision from is greater than or equal to revision to
-        /// or
-        /// Failed to start SVN process
-        /// or
-        /// An error occurred in SVN process
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Failed to start SVN process or could not get process output.
         /// </exception>
         public async Task<string> CreatePatchAsync(SubversionArguments svnArguments)
         {
@@ -32,14 +31,14 @@ namespace Aidon.Tools.Gollum.SVN
 
             if (svnArguments.RevisionFrom >= svnArguments.RevisionTo)
             {
-                throw new Exception("SVN error: RevisionFrom must be less than RevisionTo!");
+                throw new ArgumentException("SVN error: RevisionFrom must be less than RevisionTo!");
             }
 
             string arguments = String.Format("diff -r {0}:{1}", svnArguments.RevisionFrom,  svnArguments.RevisionTo);
             
             try
             {
-                string output = await StartAndGetOutputFromProcess("svn", arguments, svnArguments.Cwd).ConfigureAwait(false);
+                string output = await GetProcessOutputAsync("svn", arguments, svnArguments.Cwd).ConfigureAwait(false);
 
                 // Save output to file
                 using (TextWriter tw = new StreamWriter(patchFilePath, false, Encoding.UTF8))
@@ -49,15 +48,15 @@ namespace Aidon.Tools.Gollum.SVN
 
                 return patchFilePath;
             }
-            catch (Win32Exception ex)
+            catch (InvalidOperationException)
             {
                 File.Delete(patchFilePath);
-                throw new Exception("Failed to start SVN process: " + ex.Message + ". Error code: " + ex.NativeErrorCode, ex);
+                throw;
             }
             catch (Exception ex)
             {
                 File.Delete(patchFilePath);
-                throw new Exception("An error occurred SVN process: " + ex.Message, ex);
+                throw new InvalidOperationException("An error occurred SVN process: " + ex.Message, ex);
             }
         }
 
@@ -65,7 +64,7 @@ namespace Aidon.Tools.Gollum.SVN
         {
             string arguments = String.Format("log -r{0} --xml", svnArguments.RevisionTo);
 
-            string output = await StartAndGetOutputFromProcess("svn", arguments, svnArguments.Cwd).ConfigureAwait(false);
+            string output = await GetProcessOutputAsync("svn", arguments, svnArguments.Cwd).ConfigureAwait(false);
 
             // XML, because of enterprise!
             var xml = new XmlDocument();
@@ -80,40 +79,63 @@ namespace Aidon.Tools.Gollum.SVN
 
         }
 
-        private static async Task<string> StartAndGetOutputFromProcess(string processName, string arguments, string workingDirectory)
+        private static Task<string> GetProcessOutputAsync(string processName, string arguments, string workingDirectory)
         {
-            var process = new Process
+            return Task.Run(() =>
             {
-                StartInfo =
+                try
                 {
-                    FileName = processName,
-                    Arguments = arguments,
-                    WorkingDirectory = workingDirectory,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    RedirectStandardOutput = true
+                    var process = Process.Start(
+                        new ProcessStartInfo
+                        {
+
+                            FileName = processName,
+                            Arguments = arguments,
+                            WorkingDirectory = workingDirectory,
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            StandardOutputEncoding = Encoding.UTF8,
+                            RedirectStandardOutput = true
+                        });
+
+                    string output = process.StandardOutput.ReadToEnd();
+
+                    if (!process.WaitForExit(5000))
+                    {
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Failed to kill process '{0}': {1}", processName, ex);
+                        }
+                    }
+
+                    if (String.IsNullOrWhiteSpace(output))
+                    {
+                        throw new InvalidOperationException("The output of process '" + processName +
+                                                            "' was null or empty.");
+                    }
+
+                    return output;
                 }
-            };
-
-            if (!process.Start())
-            {
-                throw new InvalidOperationException("Failed to start '" + processName + "' process.");
-            }
-
-            string output = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-
-            process.WaitForExit(60000);
-
-            if (process.ExitCode != 0)
-            {
-                throw new Win32Exception(process.ExitCode, "The process '" + processName + "' exited with exit code " + process.ExitCode);
-            }
-            if (String.IsNullOrWhiteSpace(output))
-            {
-                throw new InvalidOperationException("The process '" + processName + "' output was null or empty.");
-            }
-            return output;
+                catch (FileNotFoundException ex)
+                {
+                    throw new InvalidOperationException("The file '" + ex.FileName + "' could not be found.");
+                }
+                catch (Win32Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        "Failed to start '" + processName + "' process: " + ex.Message + ", error code: " +
+                        ex.NativeErrorCode, ex);
+                }
+                catch (IOException ex)
+                {
+                    throw new InvalidOperationException(
+                        "Failed to read output from '" + processName + "' process: " + ex.Message, ex);
+                }
+            });
         }
     }
 }
