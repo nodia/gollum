@@ -27,21 +27,19 @@ namespace Aidon.Tools.Gollum.SVN
         /// </exception>
         public async Task<string> CreatePatchAsync(SubversionArguments svnArguments)
         {
-            string patchFilePath = Path.GetTempFileName().Replace(".tmp", ".patch");
-
             if (svnArguments.RevisionFrom >= svnArguments.RevisionTo)
             {
                 throw new ArgumentException("SVN error: RevisionFrom must be less than RevisionTo!");
             }
 
             string arguments = String.Format("diff -r {0}:{1}", svnArguments.RevisionFrom,  svnArguments.RevisionTo);
-            
+            string patchFilePath = null;
             try
             {
                 string output = await GetProcessOutputAsync("svn", arguments, svnArguments.Cwd).ConfigureAwait(false);
-
+                patchFilePath = Path.GetTempFileName().Replace(".tmp", ".patch");
                 // Save output to file
-                using (TextWriter tw = new StreamWriter(patchFilePath, false, Encoding.UTF8))
+                using (var tw = new StreamWriter(patchFilePath, false, Encoding.UTF8))
                 {
                     tw.Write(output);
                 }
@@ -50,12 +48,18 @@ namespace Aidon.Tools.Gollum.SVN
             }
             catch (InvalidOperationException)
             {
-                File.Delete(patchFilePath);
+                if (patchFilePath != null)
+                {
+                    File.Delete(patchFilePath);
+                }
                 throw;
             }
             catch (Exception ex)
             {
-                File.Delete(patchFilePath);
+                if (patchFilePath != null)
+                {
+                    File.Delete(patchFilePath);
+                }
                 throw new InvalidOperationException("An error occurred SVN process: " + ex.Message, ex);
             }
         }
@@ -88,7 +92,6 @@ namespace Aidon.Tools.Gollum.SVN
                     var process = Process.Start(
                         new ProcessStartInfo
                         {
-
                             FileName = processName,
                             Arguments = arguments,
                             WorkingDirectory = workingDirectory,

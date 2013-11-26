@@ -63,7 +63,7 @@ namespace Aidon.Tools.Gollum.GUI
                 {
                     return cw.GetCredentials();
                 }
-                throw new TaskCanceledException("User canceled login operation.");
+                throw new TaskCanceledException("User cancelled the login operation.");
             }
         }
 
@@ -233,7 +233,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
         }
 
-        private async Task PostToReviewBoard()
+        private async Task PostToReviewBoardAsync()
         {
             StartProgressBar();
             await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text);
@@ -539,8 +539,7 @@ namespace Aidon.Tools.Gollum.GUI
                     {
                         try
                         {
-                            await PostToReviewBoard();
-                            success = true;
+                            await PostToReviewBoardAsync();
                             break;
                         }
                         catch (ReviewBoardAuthenticationException ex)
@@ -571,6 +570,7 @@ namespace Aidon.Tools.Gollum.GUI
             }
             catch (TaskCanceledException)
             {
+                success = false;
                 return false;
             }
             catch (Exception ex)
