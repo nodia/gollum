@@ -63,7 +63,7 @@ namespace Aidon.Tools.Gollum.GUI
                 {
                     return cw.GetCredentials();
                 }
-                throw new TaskCanceledException("User cancelled the login operation.");
+                throw new TaskCanceledException("User canceled the login operation.");
             }
         }
 
