@@ -187,7 +187,7 @@ namespace Aidon.Tools.Gollum
         /// <param name="status">The status.</param>
         /// <param name="comment">The comment.</param>
         /// <param name="updateToken">The update token.</param>
-        /// <returns></returns>
+        /// <returns>Task that represents the asynchronous operation.</returns>
         public async Task PostToBugzillaAsync(string bugNumber, string resolution, string status, string comment, string updateToken)
         {
             OnReport("Updating Bugzilla...");
@@ -197,7 +197,8 @@ namespace Aidon.Tools.Gollum
                 UpdateToken = updateToken,
                 Comment = comment,
                 Resolution = resolution,
-                Status = status
+                Status = status,
+                CredentialCallback = CredentialCallback
             };
 
             await _bugzillaClient.PostToBugzillaAsync(arguments).ConfigureAwait(false);

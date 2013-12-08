@@ -39,9 +39,11 @@ namespace Aidon.Tools.Gollum.GUI
         public GollumForm(ProjectSettings projectSettings, SubversionArguments subversionArguments)
         {
             InitializeComponent();
-            var graphics = CreateGraphics();
-            _dpiX = graphics.DpiX;
-            _dpiY = graphics.DpiY;
+            using (var graphics = CreateGraphics())
+            {
+                _dpiX = graphics.DpiX;
+                _dpiY = graphics.DpiY;
+            }
             _projectSettings = projectSettings;
             _subversionArguments = subversionArguments;
             _bugMatcher = new Regex(@"(?<=(fixed bug #)|(fix for bug #)|(fixed bug )|(fix for bug ))\s?\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -233,12 +235,6 @@ namespace Aidon.Tools.Gollum.GUI
             }
         }
 
-        private async Task PostToReviewBoardAsync()
-        {
-            StartProgressBar();
-            await _engine.PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardSummary.Text, textBoxBugsFixed.Text);
-        }
-
         private void StartProgressBar()
         {
             progressBar.Style = ProgressBarStyle.Marquee;
@@ -251,23 +247,45 @@ namespace Aidon.Tools.Gollum.GUI
             progressBar.MarqueeAnimationSpeed = 0;
         }
 
-        private async Task PostToBugzillaAsync()
+        private async Task PostToReviewBoardAsync(string summary, string description, string bugs)
+        {
+            while (true)
+            {
+                try
+                {
+                    await _engine.PostToReviewBoardAsync(summary, description, bugs).ConfigureAwait(false);
+                    break;
+                }
+                catch (ReviewBoardAuthenticationException ex)
+                {
+                    Console.WriteLine("Reviewboard authentication failed: " + ex);
+                }
+            }
+        }
+
+        private async Task PostToBugzillaAsync(string token, string resolution, string status, string bugNumber, string bugzillaComment)
         {
             if (_bug == null)
             {
                 return;
             }
 
-            string token = _bug.UpdateToken;
-            string resolution = comboBoxBugResolution.GetItemText(comboBoxBugResolution.SelectedItem);
-            string status = comboBoxBugStatus.GetItemText(comboBoxBugStatus.SelectedItem);
-
-            var bugZillaComment = ConvertBugzillaComment(textBoxBugComment.Text);
-            await _engine.PostToBugzillaAsync(textBoxBugNumber.Text,
-                                                     resolution,
-                                                     status,
-                                                     bugZillaComment,
-                                                     token).ConfigureAwait(false);
+            while (true)
+            {
+                try
+                {
+                    await _engine.PostToBugzillaAsync(bugNumber,
+                                                      resolution,
+                                                      status,
+                                                      bugzillaComment,
+                                                      token).ConfigureAwait(false);
+                    break;
+                }
+                catch (BugzillaAuthenticationException ex)
+                {
+                    Console.WriteLine("Bugzilla authentication failed: " + ex);
+                }
+            }
         }
 
         private string ConvertBugzillaComment(string comment)
@@ -393,7 +411,7 @@ namespace Aidon.Tools.Gollum.GUI
 
                     if (ex is TaskCanceledException)
                     {
-                        UpdateStatus("Post review", true);
+                        UpdateStatus(GetReviewButtonText(), true);
                         return;
                     }
 
@@ -402,7 +420,7 @@ namespace Aidon.Tools.Gollum.GUI
                     if (!(ex is BugzillaAuthenticationException))
                     {
                         MessageBox.Show(this, "Could not get bug status. See log for more information.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        UpdateStatus("Post review", true);
+                        UpdateStatus(GetReviewButtonText(), true);
                         return;
                     }
                     
@@ -525,46 +543,32 @@ namespace Aidon.Tools.Gollum.GUI
         {
             bool success = true;
             bool updateOnlyBugzilla = checkBoxUpdateOnlyBugzilla.Checked;
+
+            groupBoxReviewBoard.Enabled = false;
+            groupBoxBugzilla.Enabled = false;
+            buttonCancel.Enabled = false;
+            buttonPostReview.Enabled = false;
+
             try
             {
                 StartProgressBar();
 
                 if (!_reviewBoardDone && !updateOnlyBugzilla)
                 {
-                    groupBoxReviewBoard.Enabled = false;
-                    groupBoxBugzilla.Enabled = false;
-                    buttonCancel.Enabled = false;
-                    buttonPostReview.Enabled = false;
-                    while (true)
-                    {
-                        try
-                        {
-                            await PostToReviewBoardAsync();
-                            break;
-                        }
-                        catch (ReviewBoardAuthenticationException ex)
-                        {
-                            Console.WriteLine("Reviewboard authentication failed: " + ex);
-                        }
-                    }
+                    await PostToReviewBoardAsync(textBoxReviewBoardSummary.Text, textBoxReviewBoardDescription.Text, textBoxBugsFixed.Text);
+
                     _reviewBoardDone = true;
+
                     await Task.Delay(1000);
                 }
 
-                if ((_reviewBoardDone || updateOnlyBugzilla) && _engine.BugzillaEnabled && _bug != null)
+                if (_engine.BugzillaEnabled && _bug != null && (_reviewBoardDone || updateOnlyBugzilla))
                 {
-                    while (true)
-                    {
-                        try
-                        {
-                            await PostToBugzillaAsync();
-                            break;
-                        }
-                        catch (BugzillaAuthenticationException ex)
-                        {
-                            Console.WriteLine("Bugzilla authentication failed: " + ex);
-                        }
-                    }
+                    string bugZillaComment = ConvertBugzillaComment(textBoxBugComment.Text);
+
+                    await PostToBugzillaAsync(_bug.UpdateToken, comboBoxBugResolution.GetItemText(comboBoxBugResolution.SelectedItem), 
+                                              comboBoxBugStatus.GetItemText(comboBoxBugStatus.SelectedItem), 
+                                              textBoxBugNumber.Text, bugZillaComment);
                 }
                 return true;
             }
