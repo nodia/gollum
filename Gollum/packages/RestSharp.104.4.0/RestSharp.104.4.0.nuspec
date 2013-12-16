@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>RestSharp</id>
-    <version>104.1</version>
+    <version>104.4.0</version>
     <authors>John Sheehan,  RestSharp Community</authors>
     <owners>John Sheehan,  RestSharp Community</owners>
     <licenseUrl>https://github.com/restsharp/RestSharp/blob/master/LICENSE.txt</licenseUrl>
